@@ -33,13 +33,16 @@ jobs:
           VITE_API_URL: https://devquiz-api-5ecj.onrender.com
         run: npm run build
 
-      - name: Deploy via SSH + rsync
-        uses: burnett01/rsync-deployments@7.0.1
-        with:
-          switches: -avzr --delete
-          path: frontend/dist/
-          remote_path: ${{ secrets.SSH_PATH }}
-          remote_host: ${{ secrets.SSH_HOST }}
-          remote_port: 65002
-          remote_user: ${{ secrets.SSH_USERNAME }}
-          remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p 65002 -T 30 157.173.209.178 >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Deploy via rsync over SSH
+        run: |
+          rsync -avzr --delete \
+            -e "ssh -i ~/.ssh/deploy_key -p 65002 -o StrictHostKeyChecking=no -o ConnectTimeout=30" \
+            frontend/dist/ \
+            u991251419@157.173.209.178:/home/u991251419/domains/josepaulotimbang.com/public_html/devquiz/
