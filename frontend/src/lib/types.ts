@@ -1,4 +1,4 @@
-export type Role = "student" | "admin";
+export type Role = "student" | "editor" | "admin";
 export type Difficulty = "easy" | "medium" | "hard";
 export type QuestionType = "mcq" | "predict_output" | "debugging" | "fill_blank" | "code_writing";
 export type SessionStatus = "in_progress" | "completed" | "abandoned";
@@ -8,6 +8,7 @@ export interface User {
   email: string;
   name: string | null;
   role: Role;
+  is_master: boolean;
   created_at: string;
 }
 
@@ -69,6 +70,36 @@ export interface AnswerResult {
   points_earned: number;
 }
 
+export interface AdminStats {
+  total_courses: number;
+  total_topics: number;
+  total_questions: number;
+  published_questions: number;
+  total_users: number;
+  total_sessions: number;
+}
+
+export interface AdminQuestion {
+  id: string;
+  topic_id: string;
+  type: QuestionType;
+  difficulty: Difficulty;
+  question_text: string;
+  code_block: string | null;
+  options: { label: string; text: string }[] | null;
+  correct_answer: string;
+  explanation: string;
+  tags: string | null;
+  points: number;
+  is_published: boolean;
+}
+
+export interface UserStats {
+  quizzes_taken: number;
+  best_score: number;
+  topics_completed: number;
+}
+
 export interface QuizResult {
   session_id: string;
   score: number;
@@ -76,6 +107,8 @@ export interface QuizResult {
   percentage: number;
   status: SessionStatus;
   completed_at: string | null;
+  started_at: string | null;
+  time_taken_seconds: number | null;
   items: {
     question_id: string;
     user_answer: string | null;

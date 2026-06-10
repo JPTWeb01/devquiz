@@ -1,9 +1,17 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { BookOpen, PlayCircle, Trophy } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import api from "../lib/api";
+import type { UserStats } from "../lib/types";
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const [stats, setStats] = useState<UserStats | null>(null);
+
+  useEffect(() => {
+    api.get<UserStats>("/api/users/me/stats").then(({ data }) => setStats(data));
+  }, []);
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-10">
@@ -17,17 +25,17 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
         <div className="card text-center">
           <Trophy className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
-          <p className="text-2xl font-bold text-slate-100">—</p>
+          <p className="text-2xl font-bold text-slate-100">{stats ? stats.best_score : "—"}</p>
           <p className="text-slate-400 text-sm mt-1">Best Score</p>
         </div>
         <div className="card text-center">
           <PlayCircle className="w-8 h-8 text-brand-500 mx-auto mb-2" />
-          <p className="text-2xl font-bold text-slate-100">—</p>
+          <p className="text-2xl font-bold text-slate-100">{stats ? stats.quizzes_taken : "—"}</p>
           <p className="text-slate-400 text-sm mt-1">Quizzes Taken</p>
         </div>
         <div className="card text-center">
           <BookOpen className="w-8 h-8 text-green-400 mx-auto mb-2" />
-          <p className="text-2xl font-bold text-slate-100">—</p>
+          <p className="text-2xl font-bold text-slate-100">{stats ? stats.topics_completed : "—"}</p>
           <p className="text-slate-400 text-sm mt-1">Topics Completed</p>
         </div>
       </div>

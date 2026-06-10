@@ -10,6 +10,8 @@ from app.schemas.question import QuestionOut
 class QuizStartRequest(BaseModel):
     topic_id: str
     question_count: int = Field(default=10, ge=5, le=30)
+    difficulty: Optional[str] = None   # "easy" | "medium" | "hard" | None = all
+    question_type: Optional[str] = None  # "mcq" | "predict_output" | etc | None = all
 
 
 class QuizStartOut(BaseModel):
@@ -28,7 +30,7 @@ class AnswerRequest(BaseModel):
 class AnswerOut(BaseModel):
     is_correct: bool
     correct_answer: str
-    explanation: str
+    explanation: Optional[str] = None
     points_earned: int
 
 
@@ -46,4 +48,6 @@ class QuizResultOut(BaseModel):
     percentage: float
     status: SessionStatus
     completed_at: Optional[datetime]
+    started_at: Optional[datetime]
+    time_taken_seconds: Optional[int]
     items: List[SessionItemOut]

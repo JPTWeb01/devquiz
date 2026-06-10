@@ -50,7 +50,11 @@ def start_quiz(
             total_questions=len(questions),
         )
 
-    questions = select_questions(db, data.topic_id, data.question_count)
+    questions = select_questions(
+        db, data.topic_id, data.question_count,
+        difficulty=data.difficulty,
+        question_type=data.question_type,
+    )
     if not questions:
         raise HTTPException(status_code=404, detail="No questions available for this topic")
 
@@ -106,7 +110,11 @@ def submit_answer(
         raise HTTPException(status_code=404, detail="Question not found in session or already answered")
 
     question = item.question
-    is_correct = data.answer.strip().lower() == question.correct_answer.strip().lower()
+    # Case-insensitive only for MCQ and fill_blank; exact match for code-based types
+    if question.type.value in ("mcq", "fill_blank"):
+        is_correct = data.answer.strip().lower() == question.correct_answer.strip().lower()
+    else:
+        is_correct = data.answer.strip() == question.correct_answer.strip()
 
     item.user_answer = data.answer
     item.is_correct = is_correct
@@ -160,6 +168,12 @@ def get_results(
     )
     percentage = (session.score / session.total_points * 100) if session.total_points > 0 else 0
 
+    time_taken = None
+    if session.started_at and session.completed_at:
+        start = session.started_at.replace(tzinfo=None) if session.started_at.tzinfo else session.started_at
+        end = session.completed_at.replace(tzinfo=None) if session.completed_at.tzinfo else session.completed_at
+        time_taken = max(0, int((end - start).total_seconds()))
+
     return QuizResultOut(
         session_id=session.id,
         score=session.score,
@@ -167,6 +181,8 @@ def get_results(
         percentage=round(percentage, 1),
         status=session.status,
         completed_at=session.completed_at,
+        started_at=session.started_at,
+        time_taken_seconds=time_taken,
         items=[
             SessionItemOut(
                 question_id=item.question_id,

@@ -29,7 +29,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center px-4">
       <div className="card w-full max-w-md">
         <div className="flex items-center justify-center gap-2 mb-8">
           <Code2 className="w-8 h-8 text-brand-500" />
@@ -76,6 +76,18 @@ export default function LoginPage() {
           </Link>
         </p>
       </div>
+
+      <p className="text-slate-600 text-xs mt-8">
+        © {new Date().getFullYear()} All rights reserved ·{" "}
+        <a
+          href="https://josepaulotimbang.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-slate-400 transition-colors"
+        >
+          josepaulotimbang.com
+        </a>
+      </p>
     </div>
   );
 }

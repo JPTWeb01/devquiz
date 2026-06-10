@@ -43,7 +43,7 @@ export default function CourseDetailPage() {
               {topic.description && <p className="text-slate-400 text-sm mt-0.5 ml-7">{topic.description}</p>}
             </div>
             <Link
-              to={`/quiz/start?topic=${topic.id}`}
+              to={`/quiz/start?topic=${topic.id}&title=${encodeURIComponent(topic.title)}`}
               className="flex items-center gap-1.5 btn-primary text-sm whitespace-nowrap"
             >
               <PlayCircle className="w-4 h-4" />

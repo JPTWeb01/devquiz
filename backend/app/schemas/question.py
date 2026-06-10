@@ -9,13 +9,14 @@ class QuestionCreate(BaseModel):
     topic_id: str
     type: QuestionType
     difficulty: Difficulty
-    question_text: str = Field(..., min_length=10)
+    question_text: str = Field(..., min_length=1)
     code_block: Optional[str] = None
     options: Optional[List[dict]] = None
     correct_answer: str
     explanation: str
     tags: Optional[str] = None
     points: int = Field(default=10, ge=1, le=100)
+    is_published: bool = True
 
 
 class QuestionOut(BaseModel):
@@ -31,5 +32,23 @@ class QuestionOut(BaseModel):
 
 
 class QuestionWithAnswerOut(QuestionOut):
+    topic_id: str
     correct_answer: str
     explanation: str
+    tags: Optional[str]
+    is_published: bool
+
+    model_config = {"from_attributes": True}
+
+
+class QuestionUpdate(BaseModel):
+    type: Optional[QuestionType] = None
+    difficulty: Optional[Difficulty] = None
+    question_text: Optional[str] = None
+    code_block: Optional[str] = None
+    options: Optional[List[dict]] = None
+    correct_answer: Optional[str] = None
+    explanation: Optional[str] = None
+    tags: Optional[str] = None
+    points: Optional[int] = Field(default=None, ge=1, le=100)
+    is_published: Optional[bool] = None

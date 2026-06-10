@@ -1,26 +1,36 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Trophy, RotateCcw, BookOpen } from "lucide-react";
+import { BookOpen, Clock, Trophy } from "lucide-react";
 import api from "../lib/api";
 import type { QuizResult } from "../lib/types";
+
+function formatTime(seconds: number): string {
+  if (seconds < 60) return `${seconds}s`;
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return s === 0 ? `${m}m` : `${m}m ${s}s`;
+}
 
 export default function ResultsPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const [result, setResult] = useState<QuizResult | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!sessionId) return;
     api.get<QuizResult>(`/api/quiz/results/${sessionId}`)
       .then(({ data }) => setResult(data))
+      .catch(() => setError("Could not load results. Please try again."))
       .finally(() => setLoading(false));
   }, [sessionId]);
 
   if (loading) return <div className="flex justify-center items-center h-64 text-slate-400">Loading results...</div>;
+  if (error) return <div className="text-center text-red-400 py-12">{error}</div>;
   if (!result) return <div className="text-center text-red-400 py-12">Results not found</div>;
 
   const passed = result.percentage >= 70;
-  const correct = result.items.filter((i) => i.is_correct).length;
+  const correct = result.items.filter((i) => i.is_correct === true).length;
 
   return (
     <div className="max-w-xl mx-auto px-6 py-12 text-center">
@@ -44,6 +54,19 @@ export default function ResultsPage() {
         <div className="card text-center">
           <p className="text-2xl font-bold text-slate-100">{result.items.length - correct}</p>
           <p className="text-slate-400 text-sm mt-1">Incorrect</p>
+        </div>
+        <div className="card text-center">
+          <p className="text-2xl font-bold text-slate-100">{result.score}/{result.total_points}</p>
+          <p className="text-slate-400 text-sm mt-1">Points</p>
+        </div>
+        <div className="card text-center">
+          <div className="flex items-center justify-center gap-1.5 mb-1">
+            <Clock className="w-5 h-5 text-blue-400" />
+          </div>
+          <p className="text-2xl font-bold text-slate-100">
+            {result.time_taken_seconds != null ? formatTime(result.time_taken_seconds) : "—"}
+          </p>
+          <p className="text-slate-400 text-sm mt-1">Time Taken</p>
         </div>
       </div>
 

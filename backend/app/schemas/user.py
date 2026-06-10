@@ -22,6 +22,7 @@ class UserOut(BaseModel):
     email: str
     name: Optional[str]
     role: Role
+    is_master: bool = False
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -31,3 +32,9 @@ class TokenOut(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserOut
+
+
+class UserStatsOut(BaseModel):
+    quizzes_taken: int
+    best_score: int
+    topics_completed: int
