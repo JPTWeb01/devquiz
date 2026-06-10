@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Calendar, ChevronDown, Loader2, Play, Plus, Trash2, X } from "lucide-react";
+import { Calendar, Loader2, Play, Plus, Trash2, X } from "lucide-react";
 import api from "../../lib/api";
 import AdminLayout from "../../components/layout/AdminLayout";
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ChevronRight, Layers, Plus, Trash2, X } from "lucide-react";
+import { BookOpen, ChevronRight, Layers, Plus, Trash2, X } from "lucide-react";
 import api from "../../lib/api";
 import type { CourseListItem } from "../../lib/types";
 import AdminLayout from "../../components/layout/AdminLayout";

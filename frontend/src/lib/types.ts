@@ -45,6 +45,7 @@ export interface CourseListItem {
   icon: string | null;
   description: string | null;
   topic_count: number;
+  is_published: boolean;
 }
 
 export interface Question {

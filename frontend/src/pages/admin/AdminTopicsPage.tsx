@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { ArrowLeft, ChevronRight, FileQuestion, Plus, Trash2, X } from "lucide-react";
 import api from "../../lib/api";
-import type { Topic, CourseListItem } from "../../lib/types";
+import type { Topic } from "../../lib/types";
 import AdminLayout from "../../components/layout/AdminLayout";
 
 const BLANK = { title: "", slug: "", description: "", order: 0, is_published: false };

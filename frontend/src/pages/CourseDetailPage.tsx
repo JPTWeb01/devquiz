@@ -4,7 +4,6 @@ import { ArrowLeft, PlayCircle } from "lucide-react";
 import api from "../lib/api";
 import type { Course } from "../lib/types";
 
-const DIFFICULTY_BADGE = "text-xs font-medium px-2 py-0.5 rounded";
 
 export default function CourseDetailPage() {
   const { slug } = useParams<{ slug: string }>();
