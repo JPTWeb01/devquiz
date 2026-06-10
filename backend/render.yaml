@@ -2,6 +2,7 @@ services:
   - type: web
     name: devquiz-api
     runtime: python
+    pythonVersion: "3.11.9"
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
@@ -11,5 +12,15 @@ services:
         sync: false
       - key: ALLOWED_ORIGINS
         sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
       - key: DEBUG
         value: "false"
+      - key: AI_DAILY_LIMIT
+        value: "20"
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "10080"
+      - key: PYTHON_VERSION
+        value: "3.11.9"
