@@ -34,15 +34,16 @@ jobs:
         run: npm run build
 
       - name: Setup SSH key
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p 65002 -T 30 157.173.209.178 >> ~/.ssh/known_hosts 2>/dev/null || true
 
       - name: Deploy via rsync over SSH
         run: |
           rsync -avzr --delete \
-            -e "ssh -i ~/.ssh/deploy_key -p 65002 -o StrictHostKeyChecking=no -o ConnectTimeout=30" \
+            -e "ssh -i ~/.ssh/deploy_key -p 65002 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=30" \
             frontend/dist/ \
             u991251419@157.173.209.178:/home/u991251419/domains/josepaulotimbang.com/public_html/devquiz/
