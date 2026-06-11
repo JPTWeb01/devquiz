@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
-import { ArrowLeft, ChevronRight, FileUp, Loader2, Plus, Save, Trash2, X } from "lucide-react";
+import { ArrowLeft, ChevronRight, Eye, EyeOff, FileUp, Loader2, Plus, Save, Trash2, X } from "lucide-react";
 import api from "../../lib/api";
 import type { AdminQuestion } from "../../lib/types";
 import AdminLayout from "../../components/layout/AdminLayout";
@@ -74,6 +74,7 @@ export default function AdminQuestionsPage() {
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const [filterDiff, setFilterDiff] = useState("all");
   const [filterType, setFilterType] = useState("all");
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pdfUploading, setPdfUploading] = useState(false);
@@ -141,8 +142,16 @@ export default function AdminQuestionsPage() {
   };
 
   const togglePublish = async (q: AdminQuestion) => {
-    await api.patch(`/api/questions/${q.id}/publish`);
-    loadQuestions();
+    setTogglingId(q.id);
+    try {
+      await api.patch(`/api/questions/${q.id}/publish`);
+      loadQuestions();
+      showToast(q.is_published ? "Question set to draft" : "Question published");
+    } catch {
+      showToast("Failed to update question status", "error");
+    } finally {
+      setTogglingId(null);
+    }
   };
 
   const updateOption = (idx: number, text: string) =>
@@ -652,7 +661,9 @@ export default function AdminQuestionsPage() {
             {filtered.map((q, idx) => (
               <div
                 key={q.id}
-                className="card flex items-start justify-between gap-4 hover:border-slate-600 transition-colors"
+                className={`card flex items-start justify-between gap-4 hover:border-slate-600 transition-colors border-l-4 ${
+                  q.is_published ? "border-l-green-500/60" : "border-l-slate-600"
+                }`}
               >
                 <div className="flex items-start gap-3 min-w-0">
                   <span className="text-slate-600 font-mono text-sm mt-0.5 w-6 shrink-0">
@@ -667,9 +678,16 @@ export default function AdminQuestionsPage() {
                         {TYPE_LABELS[q.type] || q.type}
                       </span>
                       <span className="text-xs text-slate-600">{q.points}pts</span>
-                      {!q.is_published && (
-                        <span className="text-xs bg-slate-700 text-slate-400 px-1.5 py-0.5 rounded-md">draft</span>
-                      )}
+                      <span className={`text-xs px-2 py-0.5 rounded-md font-medium flex items-center gap-1 ${
+                        q.is_published
+                          ? "bg-green-500/10 text-green-400"
+                          : "bg-slate-700 text-slate-400"
+                      }`}>
+                        {q.is_published
+                          ? <><Eye className="w-3 h-3" /> Published</>
+                          : <><EyeOff className="w-3 h-3" /> Draft</>
+                        }
+                      </span>
                     </div>
                     <p className="text-slate-200 text-sm leading-relaxed">{q.question_text}</p>
                     <p className="text-slate-500 text-xs mt-1 font-mono">
@@ -681,9 +699,21 @@ export default function AdminQuestionsPage() {
                 <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={() => togglePublish(q)}
-                    className="text-xs text-slate-400 hover:text-slate-200 border border-surface-600 hover:border-slate-500 px-3 py-1.5 rounded-lg transition-colors"
+                    disabled={togglingId === q.id}
+                    className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-all disabled:opacity-50 ${
+                      q.is_published
+                        ? "text-green-400 border-green-500/30 bg-green-500/10 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30"
+                        : "text-slate-400 border-surface-600 hover:bg-green-500/10 hover:text-green-400 hover:border-green-500/30"
+                    }`}
                   >
-                    {q.is_published ? "Unpublish" : "Publish"}
+                    {togglingId === q.id ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : q.is_published ? (
+                      <Eye className="w-3.5 h-3.5" />
+                    ) : (
+                      <EyeOff className="w-3.5 h-3.5" />
+                    )}
+                    {q.is_published ? "Published" : "Draft"}
                   </button>
                   <button
                     onClick={() => handleDelete(q.id)}
