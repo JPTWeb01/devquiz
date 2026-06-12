@@ -43,7 +43,7 @@ jobs:
 
       - name: Deploy via rsync over SSH (with retries)
         run: |
-          SSH_OPTS="-i ~/.ssh/deploy_key -p 65002 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=60 -o ServerAliveInterval=15 -o ServerAliveCountMax=4"
+          SSH_OPTS="-4 -i ~/.ssh/deploy_key -p 65002 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=60 -o ServerAliveInterval=15 -o ServerAliveCountMax=4"
           for attempt in 1 2 3; do
             echo "Deploy attempt $attempt of 3..."
             rsync -avzr --delete \
