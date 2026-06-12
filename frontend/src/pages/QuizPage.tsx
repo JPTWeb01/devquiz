@@ -20,6 +20,7 @@ const TYPES = [
   { value: "predict_output", label: "Predict Output" },
   { value: "fill_blank", label: "Fill in Blank" },
   { value: "debugging", label: "Debugging" },
+  { value: "code_writing", label: "Code Writing" },
 ];
 
 const COUNTS = [5, 10, 15, 20];

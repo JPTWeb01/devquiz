@@ -3,7 +3,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.question import Difficulty, Question
+from app.models.question import Difficulty, Question, QuestionType
 
 DIFFICULTY_WEIGHTS = {
     Difficulty.EASY: 0.4,
@@ -25,7 +25,10 @@ def select_questions(
     )
 
     if question_type:
-        base_query = base_query.filter(Question.type == question_type)
+        try:
+            base_query = base_query.filter(Question.type == QuestionType(question_type))
+        except ValueError:
+            pass
 
     if difficulty:
         # Single-difficulty mode — no weighting needed

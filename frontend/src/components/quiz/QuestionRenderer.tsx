@@ -63,7 +63,7 @@ export default function QuestionRenderer({ question, selectedAnswer, onAnswer, d
         />
       )}
 
-      {question.type === "debugging" && (
+      {(question.type === "debugging" || question.type === "code_writing") && (
         <div className="rounded-lg overflow-hidden border border-surface-600">
           <Editor
             height="160px"
