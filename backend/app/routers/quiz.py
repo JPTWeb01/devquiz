@@ -1,3 +1,5 @@
+import copy
+import random
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -24,6 +26,15 @@ from app.schemas.quiz import (
 from app.services.quiz_engine import select_questions
 
 router = APIRouter()
+
+
+def _shuffle_mcq_options(options: list) -> list:
+    """Return a deep-copied, shuffled options list with labels reassigned A–D."""
+    shuffled = copy.deepcopy(options)
+    random.shuffle(shuffled)
+    for i, opt in enumerate(shuffled):
+        opt["label"] = ["A", "B", "C", "D"][i] if i < 4 else opt["label"]
+    return shuffled
 
 
 @router.post("/start", response_model=QuizStartOut)
@@ -67,9 +78,16 @@ def start_quiz(
     db.commit()
     db.refresh(session)
 
+    question_outs = []
+    for q in questions:
+        q_out = QuestionOut.model_validate(q)
+        if q.type.value == "mcq" and q.options:
+            q_out = q_out.model_copy(update={"options": _shuffle_mcq_options(q.options)})
+        question_outs.append(q_out)
+
     return QuizStartOut(
         session_id=session.id,
-        questions=[QuestionOut.model_validate(q) for q in questions],
+        questions=question_outs,
         total_questions=len(questions),
     )
 
@@ -105,11 +123,21 @@ def submit_answer(
         raise HTTPException(status_code=404, detail="Question not found in session or already answered")
 
     question = item.question
-    # Case-insensitive only for MCQ and fill_blank; exact match for code-based types
-    if question.type.value in ("mcq", "fill_blank"):
+    if question.type.value == "mcq" and question.options:
+        # Answer is the option text; compare against correct option's text
+        correct_text = next(
+            (opt.get("text", "") for opt in question.options
+             if opt.get("label") == question.correct_answer),
+            question.correct_answer,
+        )
+        is_correct = data.answer.strip().lower() == correct_text.strip().lower()
+        display_correct = correct_text
+    elif question.type.value == "fill_blank":
         is_correct = data.answer.strip().lower() == question.correct_answer.strip().lower()
+        display_correct = question.correct_answer
     else:
         is_correct = data.answer.strip() == question.correct_answer.strip()
+        display_correct = question.correct_answer
 
     item.user_answer = data.answer
     item.is_correct = is_correct
@@ -136,7 +164,7 @@ def submit_answer(
 
     return AnswerOut(
         is_correct=is_correct,
-        correct_answer=question.correct_answer,
+        correct_answer=display_correct,
         explanation=question.explanation,
         points_earned=question.points if is_correct else 0,
     )

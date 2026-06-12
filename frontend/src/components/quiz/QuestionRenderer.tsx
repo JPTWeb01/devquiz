@@ -37,10 +37,10 @@ export default function QuestionRenderer({ question, selectedAnswer, onAnswer, d
           {question.options.map((opt) => (
             <button
               key={opt.label}
-              onClick={() => !disabled && onAnswer(opt.label)}
+              onClick={() => !disabled && onAnswer(opt.text)}
               disabled={disabled}
               className={`w-full text-left px-4 py-3 rounded-lg border transition-all duration-150 ${
-                selectedAnswer === opt.label
+                selectedAnswer === opt.text
                   ? "border-brand-500 bg-brand-500/10 text-brand-400"
                   : "border-surface-600 bg-surface-700 text-slate-200 hover:border-surface-500 hover:bg-surface-600"
               } disabled:cursor-not-allowed`}
