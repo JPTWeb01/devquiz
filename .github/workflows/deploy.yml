@@ -41,9 +41,18 @@ jobs:
           printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
 
-      - name: Deploy via rsync over SSH
+      - name: Deploy via rsync over SSH (with retries)
         run: |
-          rsync -avzr --delete \
-            -e "ssh -i ~/.ssh/deploy_key -p 65002 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=30" \
-            frontend/dist/ \
-            u991251419@157.173.209.178:/home/u991251419/domains/josepaulotimbang.com/public_html/devquiz/
+          SSH_OPTS="-i ~/.ssh/deploy_key -p 65002 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=60 -o ServerAliveInterval=15 -o ServerAliveCountMax=4"
+          for attempt in 1 2 3; do
+            echo "Deploy attempt $attempt of 3..."
+            rsync -avzr --delete \
+              -e "ssh $SSH_OPTS" \
+              frontend/dist/ \
+              u991251419@srv1563.hstgr.io:/home/u991251419/domains/josepaulotimbang.com/public_html/devquiz/ \
+              && echo "Deploy successful." && exit 0
+            echo "Attempt $attempt failed."
+            [ $attempt -lt 3 ] && echo "Waiting 15s before retry..." && sleep 15
+          done
+          echo "All 3 deploy attempts failed."
+          exit 1
