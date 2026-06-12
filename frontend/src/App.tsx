@@ -22,9 +22,9 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <div className="min-h-screen bg-surface-900">
+        <div className="min-h-screen bg-surface-900 flex flex-col">
           <Navbar />
-          <main>
+          <main className="flex-1">
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/login" element={<LoginPage />} />
@@ -43,6 +43,17 @@ export default function App() {
               <Route path="/admin/questions/:status" element={<AdminRoute><AdminAllQuestionsPage /></AdminRoute>} />
             </Routes>
           </main>
+          <footer className="border-t border-surface-700 bg-surface-800 py-4 px-6 text-center text-xs text-slate-500">
+            © {new Date().getFullYear()} All rights reserved —{" "}
+            <a
+              href="https://josepaulotimbang.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-slate-300 transition-colors"
+            >
+              josepaulotimbang.com
+            </a>
+          </footer>
         </div>
       </BrowserRouter>
     </AuthProvider>
