@@ -42,13 +42,8 @@ def start_quiz(
         .first()
     )
     if existing:
-        items = db.query(QuizSessionItem).filter(QuizSessionItem.session_id == existing.id).all()
-        questions = [item.question for item in items]
-        return QuizStartOut(
-            session_id=existing.id,
-            questions=[QuestionOut.model_validate(q) for q in questions],
-            total_questions=len(questions),
-        )
+        existing.status = SessionStatus.ABANDONED
+        db.commit()
 
     questions = select_questions(
         db, data.topic_id, data.question_count,
