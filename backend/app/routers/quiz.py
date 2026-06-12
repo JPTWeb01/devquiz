@@ -147,6 +147,8 @@ def submit_answer(
     if is_correct:
         session.score += question.points
 
+    db.flush()  # write in-memory changes so the count query sees them
+
     unanswered = (
         db.query(QuizSessionItem)
         .filter(
