@@ -1,37 +1,46 @@
 """
 Bootstrap script for Render deployments.
 
-Handles two jobs:
-1. Stamp alembic_version if the DB exists but has no migration history.
-2. Apply any schema changes that aren't yet in the DB, using safe SQL
-   (checks before altering so it is always safe to re-run).
+Runs before uvicorn on every deploy. Handles:
+1. Stamp alembic_version if DB exists but has no migration history.
+2. Ensure weekly_schedules table exists (was never in Alembic init migration).
+3. Ensure question_type column exists on weekly_schedules.
+
+All operations are idempotent — safe to re-run on every deploy.
 """
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from sqlalchemy import inspect, text
+from sqlalchemy import text
 from app.database import engine
 
 STAMP_REVISION = "add_editor_role"
 
 
-def column_exists(conn, table: str, column: str) -> bool:
-    result = conn.execute(text(
-        "SELECT COUNT(*) FROM information_schema.COLUMNS "
-        "WHERE TABLE_SCHEMA = DATABASE() "
-        "AND TABLE_NAME = :table AND COLUMN_NAME = :column"
-    ), {"table": table, "column": column})
-    return result.scalar() > 0
+def scalar(conn, sql, params=None):
+    result = conn.execute(text(sql), params or {})
+    return result.scalar()
 
 
 def table_exists(conn, table: str) -> bool:
-    result = conn.execute(text(
+    return scalar(
+        conn,
         "SELECT COUNT(*) FROM information_schema.TABLES "
-        "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table"
-    ), {"table": table})
-    return result.scalar() > 0
+        "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :t",
+        {"t": table},
+    ) > 0
+
+
+def column_exists(conn, table: str, column: str) -> bool:
+    return scalar(
+        conn,
+        "SELECT COUNT(*) FROM information_schema.COLUMNS "
+        "WHERE TABLE_SCHEMA = DATABASE() "
+        "AND TABLE_NAME = :t AND COLUMN_NAME = :c",
+        {"t": table, "c": column},
+    ) > 0
 
 
 def main():
@@ -55,22 +64,42 @@ def main():
             else:
                 print("[bootstrap] Fresh DB — skipping stamp.")
         else:
-            current = conn.execute(text("SELECT version_num FROM alembic_version")).scalar()
+            current = scalar(conn, "SELECT version_num FROM alembic_version")
             print(f"[bootstrap] Alembic version: {current}")
 
-        # ── 2. Add question_type to weekly_schedules if missing ──────────
-        if table_exists(conn, "weekly_schedules"):
+        # ── 2. Create weekly_schedules if it doesn't exist ───────────────
+        if not table_exists(conn, "weekly_schedules"):
+            conn.execute(text("""
+                CREATE TABLE weekly_schedules (
+                    id VARCHAR(36) NOT NULL,
+                    day_of_week INT NOT NULL,
+                    topic_id VARCHAR(36) NOT NULL,
+                    question_count INT NOT NULL DEFAULT 5,
+                    question_type VARCHAR(30) NOT NULL DEFAULT '',
+                    is_active TINYINT(1) NOT NULL DEFAULT 1,
+                    last_run_at DATETIME NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (id),
+                    CONSTRAINT uq_day_topic UNIQUE (day_of_week, topic_id),
+                    CONSTRAINT fk_ws_topic FOREIGN KEY (topic_id)
+                        REFERENCES topics(id) ON DELETE CASCADE
+                )
+            """))
+            conn.commit()
+            print("[bootstrap] Created weekly_schedules table.")
+        else:
+            print("[bootstrap] weekly_schedules table exists.")
+
+            # ── 3. Add question_type column if missing ───────────────────
             if not column_exists(conn, "weekly_schedules", "question_type"):
                 conn.execute(text(
                     "ALTER TABLE weekly_schedules "
                     "ADD COLUMN question_type VARCHAR(30) NOT NULL DEFAULT ''"
                 ))
                 conn.commit()
-                print("[bootstrap] Added question_type column to weekly_schedules.")
+                print("[bootstrap] Added question_type column.")
             else:
                 print("[bootstrap] question_type column already exists.")
-        else:
-            print("[bootstrap] weekly_schedules table not found — will be created by Alembic.")
 
 
 if __name__ == "__main__":
