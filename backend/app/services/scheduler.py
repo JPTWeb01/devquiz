@@ -44,6 +44,7 @@ def run_daily_schedule():
                     count=entry.question_count,
                     groq_api_key=settings.GROQ_API_KEY,
                     gemini_api_key=settings.GEMINI_API_KEY,
+                    question_type=entry.question_type,
                 )
                 for q in questions:
                     question = Question(

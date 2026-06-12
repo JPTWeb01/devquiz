@@ -25,6 +25,7 @@ class ScheduleOut(BaseModel):
     topic_title: str
     course_title: str
     question_count: int
+    question_type: str
     is_active: bool
     last_run_at: Optional[datetime]
 
@@ -33,10 +34,12 @@ class ScheduleCreate(BaseModel):
     day_of_week: int = Field(..., ge=0, le=6)
     topic_id: str
     question_count: int = Field(default=5, ge=1, le=20)
+    question_type: str = ""
 
 
 class ScheduleUpdate(BaseModel):
     question_count: Optional[int] = Field(default=None, ge=1, le=20)
+    question_type: Optional[str] = None
     is_active: Optional[bool] = None
 
 
@@ -57,6 +60,7 @@ def _to_out(entry: WeeklySchedule, db: Session) -> ScheduleOut:
         topic_title=topic.title if topic else "Unknown",
         course_title=course.title if course else "Unknown",
         question_count=entry.question_count,
+        question_type=entry.question_type,
         is_active=entry.is_active,
         last_run_at=entry.last_run_at,
     )
@@ -97,6 +101,7 @@ def create_schedule(data: ScheduleCreate, db: Session = Depends(get_db), _: User
         day_of_week=data.day_of_week,
         topic_id=data.topic_id,
         question_count=data.question_count,
+        question_type=data.question_type,
     )
     db.add(entry)
     db.commit()
@@ -116,6 +121,8 @@ def update_schedule(
         raise HTTPException(status_code=404, detail="Schedule not found")
     if data.question_count is not None:
         entry.question_count = data.question_count
+    if data.question_type is not None:
+        entry.question_type = data.question_type
     if data.is_active is not None:
         entry.is_active = data.is_active
     db.commit()

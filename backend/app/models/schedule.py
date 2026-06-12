@@ -17,6 +17,7 @@ class WeeklySchedule(Base):
     day_of_week = Column(Integer, nullable=False)  # 0=Monday … 6=Sunday
     topic_id = Column(String(36), ForeignKey("topics.id", ondelete="CASCADE"), nullable=False)
     question_count = Column(Integer, default=5, nullable=False)
+    question_type = Column(String(30), nullable=False, default="")
     is_active = Column(Boolean, default=True, nullable=False)
     last_run_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

@@ -5,6 +5,15 @@ import AdminLayout from "../../components/layout/AdminLayout";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
+const QUESTION_TYPES = [
+  { value: "", label: "Mixed" },
+  { value: "mcq", label: "Multiple Choice" },
+  { value: "predict_output", label: "Predict Output" },
+  { value: "fill_blank", label: "Fill in Blank" },
+  { value: "debugging", label: "Debugging" },
+  { value: "code_writing", label: "Code Writing" },
+];
+
 interface ScheduleEntry {
   id: string;
   day_of_week: number;
@@ -13,6 +22,7 @@ interface ScheduleEntry {
   topic_title: string;
   course_title: string;
   question_count: number;
+  question_type: string;
   is_active: boolean;
   last_run_at: string | null;
 }
@@ -33,6 +43,8 @@ function Toast({ message, type }: { message: string; type: "success" | "error" }
   );
 }
 
+const selectCls = "bg-surface-600 border border-surface-500 text-slate-100 text-xs rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-500";
+
 export default function AdminSchedulePage() {
   const [entries, setEntries] = useState<ScheduleEntry[]>([]);
   const [topics, setTopics] = useState<TopicOption[]>([]);
@@ -40,10 +52,11 @@ export default function AdminSchedulePage() {
   const [triggering, setTriggering] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
-  // Add form state per day
+  // Add form state
   const [addingDay, setAddingDay] = useState<number | null>(null);
   const [newTopic, setNewTopic] = useState("");
   const [newCount, setNewCount] = useState(5);
+  const [newType, setNewType] = useState("");
   const [addSaving, setAddSaving] = useState(false);
   const [addError, setAddError] = useState("");
 
@@ -71,10 +84,16 @@ export default function AdminSchedulePage() {
     setAddSaving(true);
     setAddError("");
     try {
-      await api.post("/api/schedule", { day_of_week: day, topic_id: newTopic, question_count: newCount });
+      await api.post("/api/schedule", {
+        day_of_week: day,
+        topic_id: newTopic,
+        question_count: newCount,
+        question_type: newType,
+      });
       setAddingDay(null);
       setNewTopic("");
       setNewCount(5);
+      setNewType("");
       load();
       showToast("Schedule added");
     } catch (err: any) {
@@ -112,6 +131,15 @@ export default function AdminSchedulePage() {
     }
   };
 
+  const handleUpdateType = async (entry: ScheduleEntry, question_type: string) => {
+    try {
+      await api.put(`/api/schedule/${entry.id}`, { question_type });
+      load();
+    } catch {
+      showToast("Failed to update", "error");
+    }
+  };
+
   const handleTriggerNow = async () => {
     setTriggering(true);
     try {
@@ -128,6 +156,7 @@ export default function AdminSchedulePage() {
     setAddingDay(day);
     setNewTopic("");
     setNewCount(5);
+    setNewType("");
     setAddError("");
   };
 
@@ -220,14 +249,28 @@ export default function AdminSchedulePage() {
                           <div className="flex items-center gap-3 shrink-0">
                             {/* Question count picker */}
                             <div className="flex items-center gap-1.5">
-                              <span className="text-slate-500 text-xs">Questions:</span>
+                              <span className="text-slate-500 text-xs">Qty:</span>
                               <select
-                                className="bg-surface-600 border border-surface-500 text-slate-100 text-xs rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                                className={selectCls}
                                 value={entry.question_count}
                                 onChange={e => handleUpdateCount(entry, parseInt(e.target.value))}
                               >
                                 {[2, 3, 5, 8, 10, 15, 20].map(n => (
                                   <option key={n} value={n}>{n}</option>
+                                ))}
+                              </select>
+                            </div>
+
+                            {/* Question type picker */}
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-slate-500 text-xs">Type:</span>
+                              <select
+                                className={selectCls}
+                                value={entry.question_type}
+                                onChange={e => handleUpdateType(entry, e.target.value)}
+                              >
+                                {QUESTION_TYPES.map(t => (
+                                  <option key={t.value} value={t.value}>{t.label}</option>
                                 ))}
                               </select>
                             </div>
@@ -266,8 +309,8 @@ export default function AdminSchedulePage() {
                   {/* Add form */}
                   {isAdding && (
                     <div className="border border-blue-500/20 bg-blue-500/5 rounded-lg p-3 mt-2">
-                      <div className="flex items-start gap-3">
-                        <div className="flex-1">
+                      <div className="flex items-start gap-3 flex-wrap">
+                        <div className="flex-1 min-w-40">
                           <label className="block text-xs text-slate-400 mb-1">Topic</label>
                           <select
                             className="input text-sm"
@@ -284,7 +327,7 @@ export default function AdminSchedulePage() {
                               ))}
                           </select>
                         </div>
-                        <div className="w-28">
+                        <div className="w-24">
                           <label className="block text-xs text-slate-400 mb-1">Questions</label>
                           <input
                             className="input text-sm"
@@ -294,6 +337,18 @@ export default function AdminSchedulePage() {
                             value={newCount}
                             onChange={e => setNewCount(parseInt(e.target.value) || 5)}
                           />
+                        </div>
+                        <div className="w-40">
+                          <label className="block text-xs text-slate-400 mb-1">Type</label>
+                          <select
+                            className="input text-sm"
+                            value={newType}
+                            onChange={e => setNewType(e.target.value)}
+                          >
+                            {QUESTION_TYPES.map(t => (
+                              <option key={t.value} value={t.value}>{t.label}</option>
+                            ))}
+                          </select>
                         </div>
                         <div className="flex gap-2 mt-5">
                           <button
