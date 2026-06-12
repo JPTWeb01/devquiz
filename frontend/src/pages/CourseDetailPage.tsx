@@ -33,17 +33,17 @@ export default function CourseDetailPage() {
       <div className="mt-8 space-y-3">
         <h2 className="text-sm font-medium text-slate-400 uppercase tracking-wider">Topics</h2>
         {course.topics.map((topic, idx) => (
-          <div key={topic.id} className="card hover:border-brand-500/40 transition-all duration-150 flex items-center justify-between">
-            <div>
+          <div key={topic.id} className="card hover:border-brand-500/40 transition-all duration-150 flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-slate-500 text-sm font-mono">{String(idx + 1).padStart(2, "0")}</span>
+                <span className="text-slate-500 text-sm font-mono shrink-0">{String(idx + 1).padStart(2, "0")}</span>
                 <span className="text-slate-100 font-medium">{topic.title}</span>
               </div>
               {topic.description && <p className="text-slate-400 text-sm mt-0.5 ml-7">{topic.description}</p>}
             </div>
             <Link
               to={`/quiz/start?topic=${topic.id}&title=${encodeURIComponent(topic.title)}`}
-              className="flex items-center gap-1.5 btn-primary text-sm whitespace-nowrap"
+              className="flex items-center gap-1.5 btn-primary text-sm whitespace-nowrap self-start sm:self-auto"
             >
               <PlayCircle className="w-4 h-4" />
               Start Quiz

@@ -162,11 +162,11 @@ export default function AdminSchedulePage() {
 
   return (
     <AdminLayout>
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         {toast && <Toast {...toast} />}
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-8">
           <div>
             <h1 className="text-2xl font-bold text-slate-100">Auto-Generate Schedule</h1>
             <p className="text-slate-400 text-sm mt-1">
@@ -176,7 +176,7 @@ export default function AdminSchedulePage() {
           <button
             onClick={handleTriggerNow}
             disabled={triggering}
-            className="btn-ghost flex items-center gap-2 text-sm"
+            className="btn-ghost flex items-center gap-2 text-sm self-start sm:self-auto shrink-0"
           >
             {triggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
             {triggering ? "Running..." : "Run Today Now"}
@@ -235,18 +235,18 @@ export default function AdminSchedulePage() {
                       {dayEntries.map(entry => (
                         <div
                           key={entry.id}
-                          className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border transition-colors ${
+                          className={`flex flex-col sm:flex-row sm:items-center gap-2 px-3 py-2.5 rounded-lg border transition-colors ${
                             entry.is_active
                               ? "border-surface-600 bg-surface-700"
                               : "border-surface-700 bg-surface-800 opacity-50"
                           }`}
                         >
-                          <div className="min-w-0">
+                          <div className="min-w-0 flex-1">
                             <p className="text-slate-200 text-sm font-medium truncate">{entry.topic_title}</p>
                             <p className="text-slate-500 text-xs">{entry.course_title}</p>
                           </div>
 
-                          <div className="flex items-center gap-3 shrink-0">
+                          <div className="flex items-center gap-3 flex-wrap shrink-0">
                             {/* Question count picker */}
                             <div className="flex items-center gap-1.5">
                               <span className="text-slate-500 text-xs">Qty:</span>

@@ -248,7 +248,7 @@ export default function AdminQuestionsPage() {
 
   return (
     <AdminLayout>
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         {toast && <Toast {...toast} />}
 
         {/* Breadcrumb */}
@@ -267,12 +267,12 @@ export default function AdminQuestionsPage() {
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
+          <div className="flex-1">
             <h1 className="text-2xl font-bold text-slate-100">{topicTitle}</h1>
             <p className="text-slate-400 text-sm mt-1">{questions.length} questions total</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => { setShowAI(!showAI); setGenerated([]); setPdfError(""); }}
               className="btn-ghost flex items-center gap-2 text-sm"
@@ -290,7 +290,7 @@ export default function AdminQuestionsPage() {
 
         {/* Stats summary */}
         {questions.length > 0 && (
-          <div className="grid grid-cols-4 gap-3 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
             {[
               { label: "Easy", count: counts.easy, color: "text-green-400 bg-green-400/10" },
               { label: "Medium", count: counts.medium, color: "text-yellow-400 bg-yellow-400/10" },

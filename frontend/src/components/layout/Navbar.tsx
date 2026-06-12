@@ -1,25 +1,29 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Code2, LogOut, Settings, User } from "lucide-react";
+import { Code2, LogOut, Menu, Settings, User, X } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 
 export default function Navbar() {
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate("/login");
+    setMenuOpen(false);
   };
 
   return (
-    <nav className="border-b border-surface-700 bg-surface-800 px-6 py-4">
+    <nav className="border-b border-surface-700 bg-surface-800 px-4 sm:px-6 py-4 relative z-40">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 text-slate-100 font-semibold text-lg">
           <Code2 className="w-6 h-6 text-brand-500" />
           DevQuiz
         </Link>
 
-        <div className="flex items-center gap-4">
+        {/* Desktop nav */}
+        <div className="hidden sm:flex items-center gap-4">
           {isAuthenticated ? (
             <>
               <Link to="/dashboard" className="text-slate-300 hover:text-slate-100 text-sm transition-colors">
@@ -36,9 +40,12 @@ export default function Navbar() {
               )}
               <div className="flex items-center gap-2 text-slate-400 text-sm">
                 <User className="w-4 h-4" />
-                {user?.name || user?.email}
+                <span className="max-w-[120px] truncate">{user?.name || user?.email}</span>
               </div>
-              <button onClick={handleLogout} className="flex items-center gap-1 text-slate-400 hover:text-red-400 text-sm transition-colors">
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-1 text-slate-400 hover:text-red-400 text-sm transition-colors"
+              >
                 <LogOut className="w-4 h-4" />
                 Logout
               </button>
@@ -54,7 +61,78 @@ export default function Navbar() {
             </>
           )}
         </div>
+
+        {/* Mobile hamburger */}
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          className="sm:hidden p-2 text-slate-400 hover:text-slate-200 hover:bg-surface-700 rounded-lg transition-colors"
+          aria-label="Toggle menu"
+        >
+          {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
       </div>
+
+      {/* Mobile dropdown menu */}
+      {menuOpen && (
+        <div className="sm:hidden absolute top-full left-0 right-0 bg-surface-800 border-b border-surface-700 z-50 px-4 py-2 space-y-1 shadow-xl">
+          {isAuthenticated ? (
+            <>
+              <div className="flex items-center gap-2 text-slate-400 text-sm px-2 py-2 border-b border-surface-700 mb-1">
+                <User className="w-4 h-4 shrink-0" />
+                <span className="truncate">{user?.name || user?.email}</span>
+              </div>
+              <Link
+                to="/dashboard"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-2 text-slate-300 hover:text-slate-100 text-sm px-2 py-2.5 rounded-lg hover:bg-surface-700 transition-colors"
+              >
+                Dashboard
+              </Link>
+              <Link
+                to="/courses"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-2 text-slate-300 hover:text-slate-100 text-sm px-2 py-2.5 rounded-lg hover:bg-surface-700 transition-colors"
+              >
+                Courses
+              </Link>
+              {user?.role === "admin" && (
+                <Link
+                  to="/admin"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-2 text-brand-400 hover:text-brand-300 text-sm px-2 py-2.5 rounded-lg hover:bg-surface-700 transition-colors"
+                >
+                  <Settings className="w-3.5 h-3.5" />
+                  Admin
+                </Link>
+              )}
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 text-slate-400 hover:text-red-400 text-sm w-full px-2 py-2.5 rounded-lg hover:bg-surface-700 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                onClick={() => setMenuOpen(false)}
+                className="block text-slate-300 hover:text-slate-100 text-sm px-2 py-2.5 rounded-lg hover:bg-surface-700 transition-colors"
+              >
+                Login
+              </Link>
+              <Link
+                to="/register"
+                onClick={() => setMenuOpen(false)}
+                className="block btn-primary text-sm text-center mt-1"
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
+        </div>
+      )}
     </nav>
   );
 }

@@ -95,7 +95,7 @@ export default function AdminCoursesPage() {
 
   return (
     <AdminLayout>
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         {toast && <Toast {...toast} />}
 
         {/* Header */}
@@ -227,9 +227,9 @@ export default function AdminCoursesPage() {
               return (
                 <div
                   key={course.id}
-                  className="card flex items-center justify-between gap-4 hover:border-slate-600 transition-colors"
+                  className="card flex flex-col sm:flex-row sm:items-center gap-3 hover:border-slate-600 transition-colors"
                 >
-                  <div className="flex items-center gap-4 min-w-0">
+                  <div className="flex items-center gap-4 min-w-0 flex-1">
                     <span className={`text-xs font-mono font-semibold px-2.5 py-1 rounded-md shrink-0 ${lang.color}`}>
                       {lang.label}
                     </span>

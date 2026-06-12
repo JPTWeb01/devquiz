@@ -90,7 +90,7 @@ export default function AdminTopicsPage() {
 
   return (
     <AdminLayout>
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         {toast && <Toast {...toast} />}
 
         {/* Breadcrumb */}
@@ -212,9 +212,9 @@ export default function AdminTopicsPage() {
             {topics.map((topic, idx) => (
               <div
                 key={topic.id}
-                className="card flex items-center justify-between gap-4 hover:border-slate-600 transition-colors"
+                className="card flex flex-col sm:flex-row sm:items-center gap-3 hover:border-slate-600 transition-colors"
               >
-                <div className="flex items-center gap-4 min-w-0">
+                <div className="flex items-center gap-4 min-w-0 flex-1">
                   <span className="text-slate-600 font-mono text-sm w-6 shrink-0">
                     {String(idx + 1).padStart(2, "0")}
                   </span>

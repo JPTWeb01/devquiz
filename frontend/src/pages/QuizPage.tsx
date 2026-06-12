@@ -179,13 +179,13 @@ export default function QuizPage() {
         </div>
 
         {/* Summary */}
-        <div className="flex items-center justify-between">
-          <p className="text-slate-500 text-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <p className="text-slate-500 text-sm flex-1">
             {questionCount} questions ·{" "}
             {difficulty ? DIFFICULTIES.find(d => d.value === difficulty)?.label : "All Levels"} ·{" "}
             {questionType ? TYPES.find(t => t.value === questionType)?.label : "All Types"}
           </p>
-          <button onClick={handleStart} className="btn-primary flex items-center gap-2">
+          <button onClick={handleStart} className="btn-primary flex items-center gap-2 self-start sm:self-auto">
             <PlayCircle className="w-5 h-5" /> Start Quiz
           </button>
         </div>

@@ -139,7 +139,7 @@ export default function AdminUsersPage() {
 
   return (
     <AdminLayout>
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         {toast && <Toast {...toast} />}
 
         {/* Header */}
@@ -288,8 +288,8 @@ export default function AdminUsersPage() {
             {[1, 2, 3, 4].map(i => <div key={i} className="card h-16 animate-pulse bg-surface-700" />)}
           </div>
         ) : (
-          <div className="card overflow-hidden p-0">
-            <table className="w-full">
+          <div className="card overflow-hidden p-0 overflow-x-auto">
+            <table className="w-full min-w-[600px]">
               <thead>
                 <tr className="border-b border-surface-700">
                   <th className="text-left text-xs font-medium text-slate-500 uppercase tracking-wide px-6 py-3">User</th>
