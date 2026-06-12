@@ -95,14 +95,6 @@ export interface AdminQuestion {
   is_published: boolean;
 }
 
-export interface Terminology {
-  id: string;
-  topic_id: string;
-  term: string;
-  meaning: string;
-  order: number;
-}
-
 export interface UserStats {
   quizzes_taken: number;
   best_score: number;
