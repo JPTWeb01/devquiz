@@ -12,8 +12,24 @@ from app.routers import admin, auth, courses, quiz, questions, schedule, topics,
 limiter = Limiter(key_func=get_remote_address)
 
 
+def _ensure_schema():
+    """Add any missing columns that weren't in the original Alembic init migration."""
+    from app.database import engine
+    from sqlalchemy import text
+    try:
+        with engine.connect() as conn:
+            conn.execute(text(
+                "ALTER TABLE weekly_schedules "
+                "ADD COLUMN question_type VARCHAR(30) NOT NULL DEFAULT ''"
+            ))
+            conn.commit()
+    except Exception:
+        pass  # Column already exists — safe to ignore
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    _ensure_schema()
     from app.services.scheduler import start, stop
     start(hour=0, minute=0)  # runs daily at midnight UTC
     yield
