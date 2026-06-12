@@ -67,7 +67,7 @@ const FEATURES = [
     bg: "bg-cyan-400/10",
     border: "border-cyan-400/20",
     title: "Multi-Role Access",
-    desc: "Admin, Editor, and Student roles with fine-grained permissions for managing content and users.",
+    desc: "Admins manage courses, topics, and questions. Students focus entirely on taking quizzes and tracking their progress — no content access.",
   },
 ];
 
@@ -195,8 +195,8 @@ export default function HomePage() {
                 style={{ animationDelay: "0.2s" }}
               >
                 AI-generated quizzes across JavaScript, Python, React, TypeScript,
-                HTML &amp; CSS, and AI Engineering — or add your own questions manually.
-                Built to sharpen your skills through daily practice.
+                HTML &amp; CSS, and AI Engineering — or admins can add questions manually.
+                Students focus on taking quizzes and tracking their progress.
               </p>
 
               {/* CTAs */}
