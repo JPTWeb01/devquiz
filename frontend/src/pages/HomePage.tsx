@@ -195,8 +195,8 @@ export default function HomePage() {
                 style={{ animationDelay: "0.2s" }}
               >
                 AI-generated quizzes across JavaScript, Python, React, TypeScript,
-                HTML &amp; CSS, and AI Engineering. Built to sharpen your skills
-                through daily practice.
+                HTML &amp; CSS, and AI Engineering — or add your own questions manually.
+                Built to sharpen your skills through daily practice.
               </p>
 
               {/* CTAs */}
