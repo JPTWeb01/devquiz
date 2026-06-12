@@ -219,7 +219,7 @@ export default function HomePage() {
                     <button
                       onClick={handleGuestLogin}
                       disabled={guestLoading}
-                      className="text-slate-500 hover:text-slate-300 text-sm underline underline-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex items-center gap-2 text-sm px-5 py-2.5 rounded-lg border border-surface-600 text-slate-300 hover:border-slate-400 hover:text-slate-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {guestLoading ? "Loading..." : "Try as Guest"}
                     </button>
@@ -463,7 +463,7 @@ export default function HomePage() {
               <button
                 onClick={handleGuestLogin}
                 disabled={guestLoading}
-                className="text-slate-500 hover:text-slate-300 text-sm underline underline-offset-2 transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-6 py-3 text-base rounded-lg border border-surface-600 text-slate-300 hover:border-slate-400 hover:text-slate-100 transition-colors disabled:opacity-50"
               >
                 {guestLoading ? "Loading..." : "Try as Guest"}
               </button>
