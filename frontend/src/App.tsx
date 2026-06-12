@@ -16,6 +16,7 @@ import AdminTopicsPage from "./pages/admin/AdminTopicsPage";
 import AdminQuestionsPage from "./pages/admin/AdminQuestionsPage";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminSchedulePage from "./pages/admin/AdminSchedulePage";
+import AdminAllQuestionsPage from "./pages/admin/AdminAllQuestionsPage";
 
 export default function App() {
   return (
@@ -39,6 +40,7 @@ export default function App() {
               <Route path="/admin/topics/:topicId/questions" element={<AdminRoute><AdminQuestionsPage /></AdminRoute>} />
               <Route path="/admin/users" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
               <Route path="/admin/schedule" element={<AdminRoute><AdminSchedulePage /></AdminRoute>} />
+              <Route path="/admin/questions/:status" element={<AdminRoute><AdminAllQuestionsPage /></AdminRoute>} />
             </Routes>
           </main>
         </div>

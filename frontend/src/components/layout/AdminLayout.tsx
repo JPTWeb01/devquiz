@@ -1,15 +1,21 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { BookOpen, Calendar, Code2, LayoutDashboard, Menu, Users, X } from "lucide-react";
+import { BookOpen, Calendar, ChevronDown, ChevronRight, Code2, Eye, EyeOff, FileQuestion, LayoutDashboard, Menu, Users, X } from "lucide-react";
 
-const NAV = [
+const NAV_TOP = [
   { label: "Overview", href: "/admin", icon: LayoutDashboard, exact: true },
   { label: "Courses", href: "/admin/courses", icon: BookOpen, exact: false },
+];
+
+const NAV_BOTTOM = [
   { label: "Users", href: "/admin/users", icon: Users, exact: false },
   { label: "Schedule", href: "/admin/schedule", icon: Calendar, exact: false },
 ];
 
 function SidebarContent({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
+  const onQuestionsRoute = pathname.startsWith("/admin/questions");
+  const [questionsOpen, setQuestionsOpen] = useState(onQuestionsRoute);
+
   return (
     <>
       <div className="p-4 flex-1 overflow-y-auto">
@@ -17,7 +23,72 @@ function SidebarContent({ pathname, onNavigate }: { pathname: string; onNavigate
           Admin Panel
         </p>
         <nav className="space-y-1">
-          {NAV.map(({ label, href, icon: Icon, exact }) => {
+          {NAV_TOP.map(({ label, href, icon: Icon, exact }) => {
+            const active = exact ? pathname === href : pathname.startsWith(href);
+            return (
+              <Link
+                key={href}
+                to={href}
+                onClick={onNavigate}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                  active
+                    ? "bg-brand-600/20 text-blue-400 font-medium"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-surface-700"
+                }`}
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                {label}
+              </Link>
+            );
+          })}
+
+          {/* Questions collapsible */}
+          <div>
+            <button
+              onClick={() => setQuestionsOpen(o => !o)}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                onQuestionsRoute
+                  ? "bg-brand-600/20 text-blue-400 font-medium"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-surface-700"
+              }`}
+            >
+              <FileQuestion className="w-4 h-4 shrink-0" />
+              <span className="flex-1 text-left">Questions</span>
+              {questionsOpen
+                ? <ChevronDown className="w-3.5 h-3.5 shrink-0" />
+                : <ChevronRight className="w-3.5 h-3.5 shrink-0" />}
+            </button>
+            {questionsOpen && (
+              <div className="ml-7 mt-1 space-y-1 border-l border-surface-600 pl-3">
+                <Link
+                  to="/admin/questions/published"
+                  onClick={onNavigate}
+                  className={`flex items-center gap-2 px-2 py-2 rounded-lg text-sm transition-colors ${
+                    pathname === "/admin/questions/published"
+                      ? "text-blue-400 font-medium bg-brand-600/10"
+                      : "text-slate-400 hover:text-slate-200 hover:bg-surface-700"
+                  }`}
+                >
+                  <Eye className="w-3.5 h-3.5 shrink-0" />
+                  Published
+                </Link>
+                <Link
+                  to="/admin/questions/unpublished"
+                  onClick={onNavigate}
+                  className={`flex items-center gap-2 px-2 py-2 rounded-lg text-sm transition-colors ${
+                    pathname === "/admin/questions/unpublished"
+                      ? "text-blue-400 font-medium bg-brand-600/10"
+                      : "text-slate-400 hover:text-slate-200 hover:bg-surface-700"
+                  }`}
+                >
+                  <EyeOff className="w-3.5 h-3.5 shrink-0" />
+                  Unpublished
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {NAV_BOTTOM.map(({ label, href, icon: Icon, exact }) => {
             const active = exact ? pathname === href : pathname.startsWith(href);
             return (
               <Link

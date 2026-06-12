@@ -95,6 +95,13 @@ export interface AdminQuestion {
   is_published: boolean;
 }
 
+export interface AdminQuestionAll extends AdminQuestion {
+  published_at: string | null;
+  created_at: string | null;
+  topic_title: string;
+  course_title: string;
+}
+
 export interface UserStats {
   quizzes_taken: number;
   best_score: number;

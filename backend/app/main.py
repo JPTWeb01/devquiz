@@ -16,15 +16,18 @@ def _ensure_schema():
     """Add any missing columns that weren't in the original Alembic init migration."""
     from app.database import engine
     from sqlalchemy import text
-    try:
-        with engine.connect() as conn:
-            conn.execute(text(
-                "ALTER TABLE weekly_schedules "
-                "ADD COLUMN question_type VARCHAR(30) NOT NULL DEFAULT ''"
-            ))
-            conn.commit()
-    except Exception:
-        pass  # Column already exists — safe to ignore
+
+    _ddl = [
+        "ALTER TABLE weekly_schedules ADD COLUMN question_type VARCHAR(30) NOT NULL DEFAULT ''",
+        "ALTER TABLE questions ADD COLUMN published_at DATETIME NULL",
+    ]
+    for stmt in _ddl:
+        try:
+            with engine.connect() as conn:
+                conn.execute(text(stmt))
+                conn.commit()
+        except Exception:
+            pass  # Column already exists — safe to ignore
 
 
 @asynccontextmanager

@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, List, Optional
 
 from pydantic import BaseModel, Field
@@ -37,8 +38,31 @@ class QuestionWithAnswerOut(QuestionOut):
     explanation: str
     tags: Optional[str]
     is_published: bool
+    published_at: Optional[datetime] = None
+    created_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
+
+
+class AdminQuestionAllOut(BaseModel):
+    id: str
+    type: QuestionType
+    difficulty: Difficulty
+    question_text: str
+    code_block: Optional[str]
+    options: Optional[List[Any]]
+    correct_answer: str
+    explanation: str
+    tags: Optional[str]
+    points: int
+    is_published: bool
+    published_at: Optional[datetime]
+    created_at: Optional[datetime]
+    topic_id: str
+    topic_title: str
+    course_title: str
+
+    model_config = {"from_attributes": False}
 
 
 class QuestionUpdate(BaseModel):

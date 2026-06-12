@@ -1,19 +1,20 @@
 import io
-from datetime import date
-from typing import List
+from datetime import date, datetime, timezone
+from typing import List, Optional
 
 import pdfplumber
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.core.config import settings
 from app.core.deps import require_admin, require_editor
 from app.database import get_db
 from app.models.ai_usage import AIUsageLog, UploadRecord
 from app.models.question import Question
+from app.models.topic import Topic
 from app.models.user import User
-from app.schemas.question import QuestionCreate, QuestionUpdate, QuestionWithAnswerOut
+from app.schemas.question import AdminQuestionAllOut, QuestionCreate, QuestionUpdate, QuestionWithAnswerOut
 from app.services.ai_service import generate_questions
 
 router = APIRouter()
@@ -93,6 +94,43 @@ def update_question(
     return question
 
 
+@router.get("/admin/all", response_model=List[AdminQuestionAllOut])
+def list_all_questions(
+    status: Optional[str] = None,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_editor),
+):
+    q = db.query(Question).options(
+        joinedload(Question.topic).joinedload(Topic.course)
+    )
+    if status == "published":
+        q = q.filter(Question.is_published == True)
+    elif status == "unpublished":
+        q = q.filter(Question.is_published == False)
+    questions = q.order_by(Question.created_at.desc()).all()
+    return [
+        AdminQuestionAllOut(
+            id=question.id,
+            type=question.type,
+            difficulty=question.difficulty,
+            question_text=question.question_text,
+            code_block=question.code_block,
+            options=question.options,
+            correct_answer=question.correct_answer,
+            explanation=question.explanation,
+            tags=question.tags,
+            points=question.points,
+            is_published=question.is_published,
+            published_at=question.published_at,
+            created_at=question.created_at,
+            topic_id=question.topic_id,
+            topic_title=question.topic.title if question.topic else "",
+            course_title=question.topic.course.title if question.topic and question.topic.course else "",
+        )
+        for question in questions
+    ]
+
+
 @router.patch("/{question_id}/publish", response_model=QuestionWithAnswerOut)
 def toggle_publish(
     question_id: str,
@@ -103,6 +141,7 @@ def toggle_publish(
     if not question:
         raise HTTPException(status_code=404, detail="Question not found")
     question.is_published = not question.is_published
+    question.published_at = datetime.now(timezone.utc) if question.is_published else None
     db.commit()
     db.refresh(question)
     return question
