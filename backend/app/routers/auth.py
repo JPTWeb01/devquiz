@@ -1,3 +1,6 @@
+import uuid
+from datetime import timedelta
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -5,8 +8,10 @@ from sqlalchemy.orm import Session
 
 from app.core.security import create_access_token, hash_password, verify_password
 from app.database import get_db
-from app.models.user import User
+from app.models.user import Role, User
 from app.schemas.user import TokenOut, UserLogin, UserOut, UserRegister
+
+GUEST_EMAIL = "guest@devquiz.local"
 
 router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)
@@ -41,4 +46,26 @@ def login(request: Request, data: UserLogin, db: Session = Depends(get_db)):
         raise HTTPException(status_code=403, detail="Account disabled")
 
     token = create_access_token({"sub": user.id, "role": user.role.value})
+    return TokenOut(access_token=token, user=UserOut.model_validate(user))
+
+
+@router.get("/guest", response_model=TokenOut)
+@limiter.limit("30/minute")
+def guest_login(request: Request, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == GUEST_EMAIL).first()
+    if not user:
+        user = User(
+            email=GUEST_EMAIL,
+            name="Guest",
+            password_hash=hash_password(str(uuid.uuid4())),
+            role=Role.STUDENT,
+            is_active=True,
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    token = create_access_token(
+        {"sub": user.id, "role": user.role.value},
+        expires_delta=timedelta(hours=24),
+    )
     return TokenOut(access_token=token, user=UserOut.model_validate(user))

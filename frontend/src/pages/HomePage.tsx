@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   BarChart3,
   BookOpen,
@@ -14,6 +15,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+
+const API_URL = import.meta.env.VITE_API_URL ?? "";
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
@@ -119,7 +122,24 @@ const DEMO_OPTIONS = [
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function HomePage() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loginAsGuest } = useAuth();
+  const navigate = useNavigate();
+  const [guestLoading, setGuestLoading] = useState(false);
+
+  const handleGuestLogin = async () => {
+    setGuestLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/auth/guest`);
+      if (!res.ok) throw new Error("Failed");
+      const data = await res.json();
+      loginAsGuest(data.access_token, data.user);
+      navigate("/courses");
+    } catch {
+      // silently fail — user can try again
+    } finally {
+      setGuestLoading(false);
+    }
+  };
 
   return (
     <>
@@ -196,6 +216,13 @@ export default function HomePage() {
                     <Link to="/login" className="btn-ghost flex items-center gap-2 text-sm px-5 py-2.5">
                       Sign In
                     </Link>
+                    <button
+                      onClick={handleGuestLogin}
+                      disabled={guestLoading}
+                      className="text-slate-500 hover:text-slate-300 text-sm underline underline-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {guestLoading ? "Loading..." : "Try as Guest"}
+                    </button>
                   </>
                 )}
               </div>
@@ -426,13 +453,20 @@ export default function HomePage() {
               Browse Courses <ChevronRight className="w-5 h-5" />
             </Link>
           ) : (
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="flex flex-wrap justify-center items-center gap-3">
               <Link to="/register" className="btn-primary inline-flex items-center gap-2 px-6 py-3 text-base">
                 Create Free Account <ChevronRight className="w-5 h-5" />
               </Link>
               <Link to="/login" className="btn-ghost inline-flex items-center gap-2 px-6 py-3 text-base">
                 Sign In
               </Link>
+              <button
+                onClick={handleGuestLogin}
+                disabled={guestLoading}
+                className="text-slate-500 hover:text-slate-300 text-sm underline underline-offset-2 transition-colors disabled:opacity-50"
+              >
+                {guestLoading ? "Loading..." : "Try as Guest"}
+              </button>
             </div>
           )}
         </div>

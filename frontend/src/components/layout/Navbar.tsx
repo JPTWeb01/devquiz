@@ -4,7 +4,7 @@ import { Code2, LogOut, Menu, Settings, User, X } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 
 export default function Navbar() {
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated, isGuest } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -24,7 +24,26 @@ export default function Navbar() {
 
         {/* Desktop nav */}
         <div className="hidden sm:flex items-center gap-4">
-          {isAuthenticated ? (
+          {isAuthenticated && isGuest ? (
+            <>
+              <Link to="/courses" className="text-slate-300 hover:text-slate-100 text-sm transition-colors">
+                Courses
+              </Link>
+              <span className="text-xs px-2 py-0.5 rounded-full border border-surface-600 bg-surface-700 text-slate-400">
+                Guest
+              </span>
+              <Link to="/register" className="btn-primary text-sm">
+                Sign Up to Save Progress
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-1 text-slate-400 hover:text-red-400 text-sm transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Exit
+              </button>
+            </>
+          ) : isAuthenticated ? (
             <>
               <Link to="/dashboard" className="text-slate-300 hover:text-slate-100 text-sm transition-colors">
                 Dashboard
@@ -75,7 +94,36 @@ export default function Navbar() {
       {/* Mobile dropdown menu */}
       {menuOpen && (
         <div className="sm:hidden absolute top-full left-0 right-0 bg-surface-800 border-b border-surface-700 z-50 px-4 py-2 space-y-1 shadow-xl">
-          {isAuthenticated ? (
+          {isAuthenticated && isGuest ? (
+            <>
+              <div className="flex items-center gap-2 text-slate-400 text-sm px-2 py-2 border-b border-surface-700 mb-1">
+                <User className="w-4 h-4 shrink-0" />
+                <span>Guest Mode</span>
+                <span className="ml-auto text-xs px-1.5 py-0.5 rounded-full border border-surface-600 bg-surface-700">Guest</span>
+              </div>
+              <Link
+                to="/courses"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-2 text-slate-300 hover:text-slate-100 text-sm px-2 py-2.5 rounded-lg hover:bg-surface-700 transition-colors"
+              >
+                Courses
+              </Link>
+              <Link
+                to="/register"
+                onClick={() => setMenuOpen(false)}
+                className="block btn-primary text-sm text-center mt-1"
+              >
+                Sign Up to Save Progress
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 text-slate-400 hover:text-red-400 text-sm w-full px-2 py-2.5 rounded-lg hover:bg-surface-700 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Exit Guest Mode
+              </button>
+            </>
+          ) : isAuthenticated ? (
             <>
               <div className="flex items-center gap-2 text-slate-400 text-sm px-2 py-2 border-b border-surface-700 mb-1">
                 <User className="w-4 h-4 shrink-0" />

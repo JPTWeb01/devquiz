@@ -160,7 +160,8 @@ def submit_answer(
     if unanswered == 0:
         session.status = SessionStatus.COMPLETED
         session.completed_at = datetime.now(timezone.utc)
-        _update_progress(db, current_user.id, session.topic_id, session.score)
+        if current_user.email != "guest@devquiz.local":
+            _update_progress(db, current_user.id, session.topic_id, session.score)
 
     db.commit()
 
