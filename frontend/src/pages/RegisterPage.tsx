@@ -9,6 +9,7 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -17,6 +18,12 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
     setLoading(true);
     try {
       const { data } = await api.post<AuthResponse>("/api/auth/register", { name, email, password });
@@ -71,8 +78,23 @@ export default function RegisterPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={8}
+              autoComplete="new-password"
             />
             <p className="text-slate-500 text-xs mt-1">Minimum 8 characters</p>
+          </div>
+          <div>
+            <label className="block text-sm text-slate-400 mb-1.5">Confirm Password</label>
+            <input
+              type="password"
+              className={`input ${confirmPassword && password !== confirmPassword ? "border-red-500 focus:ring-red-500" : ""}`}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              autoComplete="new-password"
+            />
+            {confirmPassword && password !== confirmPassword && (
+              <p className="text-red-400 text-xs mt-1">Passwords do not match</p>
+            )}
           </div>
 
           {error && <p className="text-red-400 text-sm">{error}</p>}
