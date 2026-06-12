@@ -125,6 +125,7 @@ class TextGenerateRequest(BaseModel):
     topic_id: str
     content: str = Field(..., min_length=30)
     count: int = Field(default=10, ge=1, le=20)
+    question_type: str = ""
 
 
 @router.post("/from-text")
@@ -142,6 +143,7 @@ def generate_from_text(
             count=data.count,
             groq_api_key=settings.GROQ_API_KEY,
             gemini_api_key=settings.GEMINI_API_KEY,
+            question_type=data.question_type,
         )
     except ValueError as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -157,6 +159,7 @@ async def generate_from_pdf(
     file: UploadFile = File(...),
     topic_id: str = Form(...),
     count: int = Form(default=10),
+    question_type: str = Form(default=""),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_editor),
 ):
@@ -183,6 +186,7 @@ async def generate_from_pdf(
             count=count,
             groq_api_key=settings.GROQ_API_KEY,
             gemini_api_key=settings.GEMINI_API_KEY,
+            question_type=question_type,
         )
     except ValueError as e:
         raise HTTPException(status_code=500, detail=str(e))

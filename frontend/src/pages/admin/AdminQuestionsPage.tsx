@@ -83,6 +83,8 @@ export default function AdminQuestionsPage() {
   const [importingPdf, setImportingPdf] = useState(false);
   const [showAI, setShowAI] = useState(false);
   const [aiTab, setAiTab] = useState<"text" | "pdf">("text");
+  const [aiCount, setAiCount] = useState(10);
+  const [aiType, setAiType] = useState("");
   const [textContent, setTextContent] = useState("");
   const [textGenerating, setTextGenerating] = useState(false);
 
@@ -165,7 +167,7 @@ export default function AdminQuestionsPage() {
     try {
       const { data } = await api.post<{ questions: GeneratedQuestion[]; parsed_count: number }>(
         "/api/questions/from-text",
-        { topic_id: topicId, content: textContent, count: 10 }
+        { topic_id: topicId, content: textContent, count: aiCount, question_type: aiType }
       );
       setGenerated(data.questions.map(q => ({ ...q, selected: true })));
     } catch (err: any) {
@@ -185,7 +187,8 @@ export default function AdminQuestionsPage() {
       const fd = new FormData();
       fd.append("file", file);
       fd.append("topic_id", topicId);
-      fd.append("count", "10");
+      fd.append("count", String(aiCount));
+      fd.append("question_type", aiType);
       const { data } = await api.post<{ questions: GeneratedQuestion[]; parsed_count: number }>(
         "/api/questions/from-pdf", fd,
         { headers: { "Content-Type": "multipart/form-data" } }
@@ -334,6 +337,36 @@ export default function AdminQuestionsPage() {
               >
                 Upload PDF
               </button>
+            </div>
+
+            {/* Count + Type controls */}
+            <div className="flex items-center gap-3 mb-5">
+              <div className="flex items-center gap-2">
+                <label className="text-xs font-medium text-slate-400 uppercase tracking-wide whitespace-nowrap">Questions</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={aiCount}
+                  onChange={e => setAiCount(Math.min(20, Math.max(1, parseInt(e.target.value) || 1)))}
+                  className="input w-20 text-sm"
+                />
+              </div>
+              <div className="flex items-center gap-2 flex-1">
+                <label className="text-xs font-medium text-slate-400 uppercase tracking-wide whitespace-nowrap">Type</label>
+                <select
+                  value={aiType}
+                  onChange={e => setAiType(e.target.value)}
+                  className="input text-sm flex-1"
+                >
+                  <option value="">Mixed (all types)</option>
+                  <option value="mcq">Multiple Choice</option>
+                  <option value="predict_output">Predict Output</option>
+                  <option value="fill_blank">Fill in Blank</option>
+                  <option value="debugging">Debugging</option>
+                  <option value="code_writing">Code Writing</option>
+                </select>
+              </div>
             </div>
 
             {/* Text tab */}
