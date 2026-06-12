@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
-import { ArrowLeft, ChevronRight, FileQuestion, Plus, Trash2, X } from "lucide-react";
+import { ArrowLeft, BookOpen, ChevronRight, FileQuestion, Plus, Trash2, X } from "lucide-react";
 import api from "../../lib/api";
 import type { Topic } from "../../lib/types";
 import AdminLayout from "../../components/layout/AdminLayout";
@@ -240,6 +240,13 @@ export default function AdminTopicsPage() {
                   >
                     {topic.is_published ? "Unpublish" : "Publish"}
                   </button>
+                  <Link
+                    to={`/admin/topics/${topic.id}/terminology`}
+                    state={{ topicTitle: topic.title, courseTitle }}
+                    className="flex items-center gap-1.5 text-xs text-purple-400 hover:text-purple-300 border border-purple-500/30 hover:border-purple-500/60 px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    <BookOpen className="w-3 h-3" /> Terms
+                  </Link>
                   <Link
                     to={`/admin/topics/${topic.id}/questions`}
                     state={{ topicTitle: topic.title, courseTitle }}

@@ -37,3 +37,4 @@ class Topic(Base):
     course = relationship("Course", back_populates="topics")
     questions = relationship("Question", back_populates="topic", cascade="all, delete-orphan")
     progress = relationship("UserProgress", back_populates="topic")
+    terminology = relationship("Terminology", back_populates="topic", cascade="all, delete-orphan", order_by="Terminology.order")
