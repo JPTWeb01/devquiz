@@ -24,6 +24,7 @@ It supports AI-generated questions from course content, manual question creation
 ## Features
 
 - **AI-Generated Questions** — Paste content or describe a topic; AI generates quiz questions automatically (Groq / Gemini)
+- **AI Tutor Chatbox** — After every answer, students can open an AI-powered chat tutor that explains the question and answers follow-up questions in a multi-turn conversation
 - **Manual Question Creation** — Admins can write and publish questions directly through the admin panel
 - **6 Question Types** — Multiple Choice, Predict Output, Fill in the Blank, Debugging, Code Writing, and mixed
 - **Progress Tracking** — Tracks best score, quizzes taken, and topics completed per user
@@ -32,6 +33,8 @@ It supports AI-generated questions from course content, manual question creation
 - **Multi-Role Access** — Admin manages content; Students take quizzes only
 - **Guest Mode** — Try quizzes without an account; progress is not saved
 - **Published / Unpublished Questions** — Admins control question visibility with publish date tracking
+- **Bulk Admin Actions** — Select multiple questions and publish, unpublish, or delete them in one action with a select-all checkbox
+- **Detailed Results Page** — Score ring visualization, per-question review with correct/wrong indicators, collapsible explanations, and a Try Again button
 - **Mobile Responsive** — Fully usable on phones and tablets
 
 ---
@@ -67,7 +70,8 @@ It supports AI-generated questions from course content, manual question creation
 ### AI
 | Technology | Purpose |
 |---|---|
-| Groq / Gemini AI | AI question generation |
+| Groq (llama-3.3-70b) | Primary AI provider — question generation and tutor chat |
+| Google Gemini (gemini-1.5-flash) | Fallback AI provider — used if Groq fails |
 
 ### Infrastructure
 | Technology | Purpose |
@@ -100,10 +104,12 @@ DevQuiz/
 │   │   │   ├── courses.py       # Course management
 │   │   │   ├── topics.py        # Topic management
 │   │   │   ├── users.py         # User management (admin)
-│   │   │   └── schedule.py      # Weekly schedule management
+│   │   │   ├── schedule.py      # Weekly schedule management
+│   │   │   └── ai.py            # AI tutor chat endpoint
 │   │   ├── schemas/             # Pydantic schemas (request/response models)
 │   │   ├── services/
-│   │   │   └── quiz_engine.py   # Question selection logic
+│   │   │   ├── quiz_engine.py   # Question selection logic
+│   │   │   └── ai_service.py    # AI question generation + tutor chat (Groq/Gemini)
 │   │   ├── database.py          # SQLAlchemy engine and session factory
 │   │   └── main.py              # FastAPI app, lifespan, schema migrations
 │   └── requirements.txt
@@ -280,10 +286,11 @@ FastAPI REST API (Render)
   │
   ├── Auth Router      → issues JWT tokens
   ├── Quiz Router      → manages sessions, answers, results
-  ├── Questions Router → CRUD, publish/unpublish
+  ├── Questions Router → CRUD, publish/unpublish, bulk actions
   ├── Courses Router   → course and topic management
   ├── Schedule Router  → weekly question scheduling
-  └── Users Router     → admin user management
+  ├── Users Router     → admin user management
+  └── AI Router        → tutor chat (POST /api/ai/tutor)
         │
         ▼
     MySQL (Hostinger)
@@ -331,6 +338,34 @@ FastAPI REST API (Render)
 - `.env` files are gitignored — secrets never committed to the repository
 - SSH private key stored as a GitHub Actions secret, never in code
 - Database credentials only in environment variables, not in source
+
+---
+
+## Recent Updates
+
+### AI Tutor Chatbox
+After submitting an answer (correct or incorrect), an **Ask AI Tutor** button appears in the feedback panel. Clicking it opens a chat panel where:
+- The AI automatically explains the question and correct answer on open
+- Students can type follow-up questions for deeper clarification
+- The full conversation history is sent with each message so the AI maintains context
+- The chat resets when moving to the next question
+
+**Endpoint:** `POST /api/ai/tutor` — accepts question context, user answer, and conversation history. Uses Groq (llama-3.3-70b) with Gemini fallback.
+
+### Bulk Admin Actions
+Both the topic-level questions page and the global published/unpublished questions page now support bulk actions:
+- **Checkbox per row** — select individual questions
+- **Select all** — selects all visible (filtered) questions at once
+- **Bulk Publish / Unpublish** — acts only on questions that need the change
+- **Bulk Delete** — confirms before permanently deleting all selected questions
+- Results reported via toast (e.g. "8 questions published, 1 failed")
+
+### Redesigned Results Page
+The results page after completing a quiz now includes:
+- **Score ring** — SVG circle that fills green (passed ≥70%) or red (failed)
+- **Stats row** — Correct, Incorrect, Points, Time taken
+- **Per-question review** — every question listed with correct/wrong icon, difficulty and type badges, the student's answer vs the correct answer, and a collapsible explanation
+- **Try Again** button that returns to the quiz setup
 
 ---
 
