@@ -75,6 +75,8 @@ export default function AdminQuestionsPage() {
   const [filterDiff, setFilterDiff] = useState("all");
   const [filterType, setFilterType] = useState("all");
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pdfUploading, setPdfUploading] = useState(false);
@@ -233,11 +235,67 @@ export default function AdminQuestionsPage() {
   const toggleGenerated = (idx: number) =>
     setGenerated(g => g.map((q, i) => i === idx ? { ...q, selected: !q.selected } : q));
 
+  const toggleSelect = (id: string) =>
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+
+  const handleBulkPublish = async () => {
+    const toPublish = questions.filter(q => selectedIds.has(q.id) && !q.is_published);
+    if (!toPublish.length) { showToast("All selected questions are already published"); return; }
+    setBulkLoading(true);
+    try {
+      const results = await Promise.allSettled(toPublish.map(q => api.patch(`/api/questions/${q.id}/publish`)));
+      const succeeded = results.filter(r => r.status === "fulfilled").length;
+      const failed = results.filter(r => r.status === "rejected").length;
+      setSelectedIds(new Set());
+      loadQuestions();
+      if (failed === 0) {
+        showToast(`${succeeded} question${succeeded !== 1 ? "s" : ""} published`);
+      } else {
+        showToast(`${succeeded} published, ${failed} failed`, "error");
+      }
+    } catch {
+      showToast("Bulk action failed", "error");
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const handleBulkUnpublish = async () => {
+    const toUnpublish = questions.filter(q => selectedIds.has(q.id) && q.is_published);
+    if (!toUnpublish.length) { showToast("No published questions in selection"); return; }
+    setBulkLoading(true);
+    try {
+      const results = await Promise.allSettled(toUnpublish.map(q => api.patch(`/api/questions/${q.id}/publish`)));
+      const succeeded = results.filter(r => r.status === "fulfilled").length;
+      const failed = results.filter(r => r.status === "rejected").length;
+      setSelectedIds(new Set());
+      loadQuestions();
+      if (failed === 0) {
+        showToast(`${succeeded} question${succeeded !== 1 ? "s" : ""} unpublished`);
+      } else {
+        showToast(`${succeeded} unpublished, ${failed} failed`, "error");
+      }
+    } catch {
+      showToast("Bulk action failed", "error");
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
   const filtered = questions.filter(q => {
     if (filterDiff !== "all" && q.difficulty !== filterDiff) return false;
     if (filterType !== "all" && q.type !== filterType) return false;
     return true;
   });
+
+  const allFilteredSelected = filtered.length > 0 && filtered.every(q => selectedIds.has(q.id));
+
+  const toggleSelectAll = () =>
+    setSelectedIds(allFilteredSelected ? new Set() : new Set(filtered.map(q => q.id)));
 
   const counts = {
     easy: questions.filter(q => q.difficulty === "easy").length,
@@ -690,7 +748,47 @@ export default function AdminQuestionsPage() {
         ) : filtered.length === 0 ? (
           <p className="text-slate-500 text-center py-12">No questions match your filters.</p>
         ) : (
-          <div className="space-y-3">
+          <>
+            {selectedIds.size > 0 && (
+              <div className="flex items-center gap-3 mb-3 px-3 py-2 bg-brand-500/10 border border-brand-500/20 rounded-lg">
+                <span className="text-sm text-slate-300 flex-1">{selectedIds.size} selected</span>
+                <button
+                  onClick={handleBulkPublish}
+                  disabled={bulkLoading}
+                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-all disabled:opacity-50 text-green-400 border-green-500/30 bg-green-500/10 hover:bg-green-500/20"
+                >
+                  {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Eye className="w-3.5 h-3.5" />}
+                  Publish
+                </button>
+                <button
+                  onClick={handleBulkUnpublish}
+                  disabled={bulkLoading}
+                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-all disabled:opacity-50 text-slate-400 border-surface-600 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30"
+                >
+                  {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <EyeOff className="w-3.5 h-3.5" />}
+                  Unpublish
+                </button>
+                <button
+                  onClick={() => setSelectedIds(new Set())}
+                  className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
+            <div className="flex items-center gap-2 mb-2 px-1">
+              <input
+                type="checkbox"
+                id="select-all-q"
+                checked={allFilteredSelected}
+                onChange={toggleSelectAll}
+                className="w-4 h-4 cursor-pointer accent-violet-500"
+              />
+              <label htmlFor="select-all-q" className="text-xs text-slate-500 cursor-pointer select-none">
+                Select all ({filtered.length})
+              </label>
+            </div>
+            <div className="space-y-3">
             {filtered.map((q, idx) => (
               <div
                 key={q.id}
@@ -699,6 +797,13 @@ export default function AdminQuestionsPage() {
                 }`}
               >
                 <div className="flex items-start gap-3 min-w-0">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(q.id)}
+                    onChange={() => toggleSelect(q.id)}
+                    onClick={e => e.stopPropagation()}
+                    className="mt-1 w-4 h-4 shrink-0 cursor-pointer accent-violet-500"
+                  />
                   <span className="text-slate-600 font-mono text-sm mt-0.5 w-6 shrink-0">
                     {String(idx + 1).padStart(2, "0")}
                   </span>
@@ -757,7 +862,8 @@ export default function AdminQuestionsPage() {
                 </div>
               </div>
             ))}
-          </div>
+            </div>
+          </>
         )}
       </div>
     </AdminLayout>

@@ -43,6 +43,8 @@ export default function AdminAllQuestionsPage() {
   const [filterType, setFilterType] = useState("all");
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   const showToast = (message: string, type: "success" | "error" = "success") => {
     setToast({ message, type });
@@ -64,6 +66,7 @@ export default function AdminAllQuestionsPage() {
     }
     setFilterCourse("all");
     setFilterType("all");
+    setSelectedIds(new Set());
     load();
   }, [status]);
 
@@ -91,6 +94,35 @@ export default function AdminAllQuestionsPage() {
     }
   };
 
+  const toggleSelect = (id: string) =>
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+
+  const handleBulkToggle = async () => {
+    const ids = Array.from(selectedIds);
+    if (!ids.length) return;
+    setBulkLoading(true);
+    try {
+      const results = await Promise.allSettled(ids.map(id => api.patch(`/api/questions/${id}/publish`)));
+      const succeeded = results.filter(r => r.status === "fulfilled").length;
+      const failed = results.filter(r => r.status === "rejected").length;
+      setSelectedIds(new Set());
+      load();
+      if (failed === 0) {
+        showToast(`${succeeded} question${succeeded !== 1 ? "s" : ""} ${isPublished ? "unpublished" : "published"}`);
+      } else {
+        showToast(`${succeeded} updated, ${failed} failed`, "error");
+      }
+    } catch {
+      showToast("Bulk action failed", "error");
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
   const courses = ["all", ...Array.from(new Set(questions.map(q => q.course_title))).sort()];
   const types = ["all", ...Array.from(new Set(questions.map(q => q.type))).sort()];
 
@@ -99,6 +131,11 @@ export default function AdminAllQuestionsPage() {
     if (filterType !== "all" && q.type !== filterType) return false;
     return true;
   });
+
+  const allFilteredSelected = filtered.length > 0 && filtered.every(q => selectedIds.has(q.id));
+
+  const toggleSelectAll = () =>
+    setSelectedIds(allFilteredSelected ? new Set() : new Set(filtered.map(q => q.id)));
 
   return (
     <AdminLayout>
@@ -204,7 +241,48 @@ export default function AdminAllQuestionsPage() {
         ) : filtered.length === 0 ? (
           <p className="text-slate-500 text-center py-12">No questions match your filters.</p>
         ) : (
-          <div className="space-y-3">
+          <>
+            {selectedIds.size > 0 && (
+              <div className="flex items-center gap-3 mb-3 px-3 py-2 bg-brand-500/10 border border-brand-500/20 rounded-lg">
+                <span className="text-sm text-slate-300 flex-1">{selectedIds.size} selected</span>
+                <button
+                  onClick={handleBulkToggle}
+                  disabled={bulkLoading}
+                  className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-all disabled:opacity-50 ${
+                    isPublished
+                      ? "text-red-400 border-red-500/30 bg-red-500/10 hover:bg-red-500/20"
+                      : "text-green-400 border-green-500/30 bg-green-500/10 hover:bg-green-500/20"
+                  }`}
+                >
+                  {bulkLoading
+                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    : isPublished
+                      ? <EyeOff className="w-3.5 h-3.5" />
+                      : <Eye className="w-3.5 h-3.5" />
+                  }
+                  {isPublished ? "Unpublish Selected" : "Publish Selected"}
+                </button>
+                <button
+                  onClick={() => setSelectedIds(new Set())}
+                  className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
+            <div className="flex items-center gap-2 mb-2 px-1">
+              <input
+                type="checkbox"
+                id="select-all-aq"
+                checked={allFilteredSelected}
+                onChange={toggleSelectAll}
+                className="w-4 h-4 cursor-pointer accent-violet-500"
+              />
+              <label htmlFor="select-all-aq" className="text-xs text-slate-500 cursor-pointer select-none">
+                Select all ({filtered.length})
+              </label>
+            </div>
+            <div className="space-y-3">
             {filtered.map((q, idx) => (
               <div
                 key={q.id}
@@ -215,6 +293,13 @@ export default function AdminAllQuestionsPage() {
                 <div className="flex flex-col sm:flex-row sm:items-start gap-3">
                   {/* Left: question info */}
                   <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(q.id)}
+                      onChange={() => toggleSelect(q.id)}
+                      onClick={e => e.stopPropagation()}
+                      className="mt-1 w-4 h-4 shrink-0 cursor-pointer accent-violet-500"
+                    />
                     <span className="text-slate-600 font-mono text-sm mt-0.5 w-6 shrink-0">
                       {String(idx + 1).padStart(2, "0")}
                     </span>
@@ -280,7 +365,8 @@ export default function AdminAllQuestionsPage() {
                 </div>
               </div>
             ))}
-          </div>
+            </div>
+          </>
         )}
       </div>
     </AdminLayout>
