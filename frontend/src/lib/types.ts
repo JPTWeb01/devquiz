@@ -108,6 +108,19 @@ export interface UserStats {
   topics_completed: number;
 }
 
+export interface QuizResultItem {
+  question_id: string;
+  user_answer: string | null;
+  is_correct: boolean | null;
+  time_spent: number | null;
+  question_text: string;
+  question_type: string;
+  difficulty: string;
+  correct_answer: string;
+  explanation: string;
+  points: number;
+}
+
 export interface QuizResult {
   session_id: string;
   score: number;
@@ -117,10 +130,5 @@ export interface QuizResult {
   completed_at: string | null;
   started_at: string | null;
   time_taken_seconds: number | null;
-  items: {
-    question_id: string;
-    user_answer: string | null;
-    is_correct: boolean | null;
-    time_spent: number | null;
-  }[];
+  items: QuizResultItem[];
 }

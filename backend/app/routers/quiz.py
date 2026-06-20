@@ -215,6 +215,12 @@ def get_results(
                 user_answer=item.user_answer,
                 is_correct=item.is_correct,
                 time_spent=item.time_spent,
+                question_text=item.question.question_text if item.question else "",
+                question_type=item.question.type.value if item.question else "",
+                difficulty=item.question.difficulty.value if item.question else "",
+                correct_answer=item.question.correct_answer if item.question else "",
+                explanation=item.question.explanation if item.question else "",
+                points=item.question.points if item.question else 0,
             )
             for item in items
         ],

@@ -39,6 +39,12 @@ class SessionItemOut(BaseModel):
     user_answer: Optional[str]
     is_correct: Optional[bool]
     time_spent: Optional[int]
+    question_text: str = ""
+    question_type: str = ""
+    difficulty: str = ""
+    correct_answer: str = ""
+    explanation: str = ""
+    points: int = 0
 
 
 class QuizResultOut(BaseModel):
