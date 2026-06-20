@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, CheckCircle, Loader2, PlayCircle, Sparkles, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle, Loader2, PlayCircle, SendHorizontal, Sparkles, X, XCircle } from "lucide-react";
 import api from "../lib/api";
 import type { QuizSession, AnswerResult, Question } from "../lib/types";
 import QuestionRenderer from "../components/quiz/QuestionRenderer";
@@ -43,8 +43,14 @@ export default function QuizPage() {
   const [feedback, setFeedback] = useState<AnswerResult | null>(null);
   const [step, setStep] = useState<Step>("setup");
   const [error, setError] = useState("");
-  const [tutorText, setTutorText] = useState("");
+
+  // AI Tutor chat
+  type ChatMessage = { role: "user" | "tutor"; text: string };
+  const [tutorOpen, setTutorOpen] = useState(false);
+  const [tutorMessages, setTutorMessages] = useState<ChatMessage[]>([]);
+  const [tutorInput, setTutorInput] = useState("");
   const [tutorLoading, setTutorLoading] = useState(false);
+  const tutorEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!topicId) navigate("/courses");
@@ -92,18 +98,27 @@ export default function QuizPage() {
       setCurrentIdx(nextIdx);
       setAnswer("");
       setFeedback(null);
-      setTutorText("");
+      setTutorOpen(false);
+      setTutorMessages([]);
+      setTutorInput("");
       setStep("quiz");
     } else {
       navigate(`/quiz/results/${session.session_id}`);
     }
   };
 
-  const handleAskTutor = async () => {
+  useEffect(() => {
+    tutorEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [tutorMessages, tutorLoading]);
+
+  const sendTutorMessage = async (userMsg: string | null, currentMsgs: ChatMessage[]) => {
     if (!currentQuestion || !feedback) return;
     setTutorLoading(true);
-    setTutorText("");
     try {
+      const history = currentMsgs.map(m => ({
+        role: m.role === "user" ? "user" : "assistant",
+        content: m.text,
+      }));
       const { data } = await api.post<{ explanation: string }>("/api/ai/tutor", {
         question_text: currentQuestion.question_text,
         question_type: currentQuestion.type,
@@ -112,13 +127,29 @@ export default function QuizPage() {
         explanation: feedback.explanation,
         is_correct: feedback.is_correct,
         code_block: currentQuestion.code_block,
+        history,
+        message: userMsg,
       });
-      setTutorText(data.explanation);
+      setTutorMessages(prev => [...prev, { role: "tutor", text: data.explanation }]);
     } catch {
-      setTutorText("Sorry, the AI tutor is unavailable right now.");
+      setTutorMessages(prev => [...prev, { role: "tutor", text: "Sorry, I'm unavailable right now." }]);
     } finally {
       setTutorLoading(false);
     }
+  };
+
+  const openTutor = () => {
+    setTutorOpen(true);
+    if (tutorMessages.length === 0) sendTutorMessage(null, []);
+  };
+
+  const handleTutorSend = () => {
+    const msg = tutorInput.trim();
+    if (!msg || tutorLoading) return;
+    const updated: ChatMessage[] = [...tutorMessages, { role: "user", text: msg }];
+    setTutorMessages(updated);
+    setTutorInput("");
+    sendTutorMessage(msg, updated);
   };
 
   // ── Setup screen ──────────────────────────────────────────────
@@ -295,25 +326,73 @@ export default function QuizPage() {
             <p className="text-slate-400 text-sm">{feedback.explanation}</p>
 
             {/* AI Tutor */}
-            {!tutorText && !tutorLoading && (
+            {!tutorOpen && (
               <button
-                onClick={handleAskTutor}
+                onClick={openTutor}
                 className="mt-3 flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
               >
-                <Sparkles className="w-3.5 h-3.5" /> Ask AI Tutor to explain
+                <Sparkles className="w-3.5 h-3.5" /> Ask AI Tutor
               </button>
             )}
-            {tutorLoading && (
-              <div className="mt-3 flex items-center gap-2 text-slate-400 text-xs">
-                <Loader2 className="w-3.5 h-3.5 animate-spin" /> AI Tutor is thinking...
-              </div>
-            )}
-            {tutorText && (
-              <div className="mt-3 p-3 rounded-lg bg-blue-500/5 border border-blue-500/20">
-                <div className="flex items-center gap-1.5 text-blue-400 text-xs font-medium mb-1.5">
-                  <Sparkles className="w-3.5 h-3.5" /> AI Tutor
+            {tutorOpen && (
+              <div className="mt-4 rounded-xl border border-blue-500/20 bg-blue-500/5 overflow-hidden">
+                {/* Chat header */}
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-blue-500/15">
+                  <div className="flex items-center gap-1.5 text-blue-400 text-xs font-medium">
+                    <Sparkles className="w-3.5 h-3.5" /> AI Tutor
+                  </div>
+                  <button
+                    onClick={() => setTutorOpen(false)}
+                    className="text-slate-500 hover:text-slate-300 transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 </div>
-                <p className="text-slate-300 text-sm leading-relaxed">{tutorText}</p>
+
+                {/* Messages */}
+                <div className="px-4 py-3 space-y-3 max-h-64 overflow-y-auto">
+                  {tutorMessages.map((msg, i) => (
+                    <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                      <div className={`max-w-[85%] px-3 py-2 rounded-xl text-sm leading-relaxed ${
+                        msg.role === "user"
+                          ? "bg-brand-600/20 text-slate-200 border border-brand-500/20"
+                          : "bg-surface-700 text-slate-300 border border-surface-600"
+                      }`}>
+                        {msg.text}
+                      </div>
+                    </div>
+                  ))}
+                  {tutorLoading && (
+                    <div className="flex justify-start">
+                      <div className="bg-surface-700 border border-surface-600 px-3 py-2 rounded-xl flex items-center gap-2 text-slate-400 text-xs">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" /> Thinking...
+                      </div>
+                    </div>
+                  )}
+                  <div ref={tutorEndRef} />
+                </div>
+
+                {/* Input */}
+                <div className="px-4 py-3 border-t border-blue-500/15 flex gap-2">
+                  <input
+                    type="text"
+                    value={tutorInput}
+                    onChange={e => setTutorInput(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleTutorSend(); }
+                    }}
+                    placeholder="Ask a follow-up question..."
+                    disabled={tutorLoading}
+                    className="flex-1 bg-surface-700 border border-surface-600 text-slate-200 text-sm rounded-lg px-3 py-2 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 disabled:opacity-50"
+                  />
+                  <button
+                    onClick={handleTutorSend}
+                    disabled={!tutorInput.trim() || tutorLoading}
+                    className="px-3 py-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-400 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <SendHorizontal className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             )}
           </div>

@@ -157,3 +157,72 @@ def explain_answer(
             raise ValueError(f"AI tutor unavailable. Last error: {e}")
 
     raise ValueError("No AI provider configured.")
+
+
+def chat_with_tutor(
+    question_text: str,
+    question_type: str,
+    correct_answer: str,
+    user_answer: str,
+    explanation: str,
+    is_correct: bool,
+    history: list[dict],
+    message: str | None = None,
+    code_block: str | None = None,
+    groq_api_key: str = "",
+    gemini_api_key: str = "",
+) -> str:
+    code_section = f"\n\nCode:\n{code_block}" if code_block else ""
+    status = "correctly" if is_correct else "incorrectly"
+
+    system_content = (
+        f"You are a friendly, expert programming tutor for a developer education platform.\n\n"
+        f"Context — Quiz question the student just answered:\n"
+        f"Type: {question_type.replace('_', ' ')}\n"
+        f"Question: {question_text}{code_section}\n"
+        f"Student answered {status}: \"{user_answer}\"\n"
+        f"Correct answer: \"{correct_answer}\"\n"
+        f"Official explanation: \"{explanation}\"\n\n"
+        f"Help the student understand through conversation. Be encouraging, concise, and educational. "
+        f"Write naturally — no bullet points or markdown."
+    )
+
+    user_msg = message or "Please explain this question and help me understand the correct answer."
+    messages = [{"role": "system", "content": system_content}]
+    messages.extend(history)
+    messages.append({"role": "user", "content": user_msg})
+
+    if groq_api_key:
+        try:
+            from groq import Groq
+            client = Groq(api_key=groq_api_key)
+            response = client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=messages,
+                max_tokens=512,
+                temperature=0.7,
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            logger.warning("Groq tutor chat failed: %s — trying Gemini", e)
+
+    if gemini_api_key:
+        try:
+            import google.generativeai as genai
+            genai.configure(api_key=gemini_api_key)
+            model = genai.GenerativeModel(
+                model_name="gemini-1.5-flash",
+                system_instruction=system_content,
+            )
+            gemini_history = [
+                {"role": "user" if m["role"] == "user" else "model", "parts": [m["content"]]}
+                for m in history
+            ]
+            chat = model.start_chat(history=gemini_history)
+            response = chat.send_message(user_msg)
+            return response.text.strip()
+        except Exception as e:
+            logger.error("Gemini tutor chat also failed: %s", e)
+            raise ValueError(f"AI tutor unavailable. Last error: {e}")
+
+    raise ValueError("No AI provider configured.")
