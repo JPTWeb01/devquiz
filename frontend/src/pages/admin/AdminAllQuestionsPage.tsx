@@ -123,6 +123,29 @@ export default function AdminAllQuestionsPage() {
     }
   };
 
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selectedIds);
+    if (!ids.length) return;
+    if (!confirm(`Delete ${ids.length} question${ids.length !== 1 ? "s" : ""} permanently?`)) return;
+    setBulkLoading(true);
+    try {
+      const results = await Promise.allSettled(ids.map(id => api.delete(`/api/questions/${id}`)));
+      const succeeded = results.filter(r => r.status === "fulfilled").length;
+      const failed = results.filter(r => r.status === "rejected").length;
+      setSelectedIds(new Set());
+      load();
+      if (failed === 0) {
+        showToast(`${succeeded} question${succeeded !== 1 ? "s" : ""} deleted`);
+      } else {
+        showToast(`${succeeded} deleted, ${failed} failed`, "error");
+      }
+    } catch {
+      showToast("Bulk delete failed", "error");
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
   const courses = ["all", ...Array.from(new Set(questions.map(q => q.course_title))).sort()];
   const types = ["all", ...Array.from(new Set(questions.map(q => q.type))).sort()];
 
@@ -261,6 +284,14 @@ export default function AdminAllQuestionsPage() {
                       : <Eye className="w-3.5 h-3.5" />
                   }
                   {isPublished ? "Unpublish Selected" : "Publish Selected"}
+                </button>
+                <button
+                  onClick={handleBulkDelete}
+                  disabled={bulkLoading}
+                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-all disabled:opacity-50 text-red-400 border-red-500/30 bg-red-500/10 hover:bg-red-500/20"
+                >
+                  {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                  Delete
                 </button>
                 <button
                   onClick={() => setSelectedIds(new Set())}
