@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, CheckCircle, PlayCircle, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle, Loader2, PlayCircle, Sparkles, XCircle } from "lucide-react";
 import api from "../lib/api";
 import type { QuizSession, AnswerResult, Question } from "../lib/types";
 import QuestionRenderer from "../components/quiz/QuestionRenderer";
@@ -43,6 +43,8 @@ export default function QuizPage() {
   const [feedback, setFeedback] = useState<AnswerResult | null>(null);
   const [step, setStep] = useState<Step>("setup");
   const [error, setError] = useState("");
+  const [tutorText, setTutorText] = useState("");
+  const [tutorLoading, setTutorLoading] = useState(false);
 
   useEffect(() => {
     if (!topicId) navigate("/courses");
@@ -90,9 +92,32 @@ export default function QuizPage() {
       setCurrentIdx(nextIdx);
       setAnswer("");
       setFeedback(null);
+      setTutorText("");
       setStep("quiz");
     } else {
       navigate(`/quiz/results/${session.session_id}`);
+    }
+  };
+
+  const handleAskTutor = async () => {
+    if (!currentQuestion || !feedback) return;
+    setTutorLoading(true);
+    setTutorText("");
+    try {
+      const { data } = await api.post<{ explanation: string }>("/api/ai/tutor", {
+        question_text: currentQuestion.question_text,
+        question_type: currentQuestion.type,
+        correct_answer: feedback.correct_answer,
+        user_answer: answer,
+        explanation: feedback.explanation,
+        is_correct: feedback.is_correct,
+        code_block: currentQuestion.code_block,
+      });
+      setTutorText(data.explanation);
+    } catch {
+      setTutorText("Sorry, the AI tutor is unavailable right now.");
+    } finally {
+      setTutorLoading(false);
     }
   };
 
@@ -268,6 +293,29 @@ export default function QuizPage() {
               </p>
             )}
             <p className="text-slate-400 text-sm">{feedback.explanation}</p>
+
+            {/* AI Tutor */}
+            {!tutorText && !tutorLoading && (
+              <button
+                onClick={handleAskTutor}
+                className="mt-3 flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+              >
+                <Sparkles className="w-3.5 h-3.5" /> Ask AI Tutor to explain
+              </button>
+            )}
+            {tutorLoading && (
+              <div className="mt-3 flex items-center gap-2 text-slate-400 text-xs">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" /> AI Tutor is thinking...
+              </div>
+            )}
+            {tutorText && (
+              <div className="mt-3 p-3 rounded-lg bg-blue-500/5 border border-blue-500/20">
+                <div className="flex items-center gap-1.5 text-blue-400 text-xs font-medium mb-1.5">
+                  <Sparkles className="w-3.5 h-3.5" /> AI Tutor
+                </div>
+                <p className="text-slate-300 text-sm leading-relaxed">{tutorText}</p>
+              </div>
+            )}
           </div>
         )}
 
