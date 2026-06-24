@@ -18,12 +18,14 @@ import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminSchedulePage from "./pages/admin/AdminSchedulePage";
 import AdminAllQuestionsPage from "./pages/admin/AdminAllQuestionsPage";
 import HomePage from "./pages/HomePage";
+import WakeUpBanner from "./components/WakeUpBanner";
 
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <div className="min-h-screen bg-surface-900 flex flex-col">
+          <WakeUpBanner />
           <Navbar />
           <main className="flex-1">
             <Routes>
