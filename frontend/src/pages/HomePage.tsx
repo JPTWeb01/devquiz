@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   BarChart3,
   BookOpen,
+  Bot,
   Brain,
   Calendar,
   CheckCircle,
@@ -13,6 +14,7 @@ import {
   Shield,
   Shuffle,
   Sparkles,
+  Trophy,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -69,6 +71,22 @@ const FEATURES = [
     title: "Multi-Role Access",
     desc: "Admins manage courses, topics, and questions. Students focus entirely on taking quizzes and tracking their progress — no content access.",
   },
+  {
+    icon: Bot,
+    color: "text-indigo-400",
+    bg: "bg-indigo-400/10",
+    border: "border-indigo-400/20",
+    title: "AI Tutor Chat",
+    desc: "After every answer, open a chat with an AI tutor that explains the concept and answers your follow-up questions in real time.",
+  },
+  {
+    icon: Trophy,
+    color: "text-emerald-400",
+    bg: "bg-emerald-400/10",
+    border: "border-emerald-400/20",
+    title: "Detailed Results Review",
+    desc: "Score ring, per-question breakdown, your answer vs the correct one, and collapsible explanations — all on the results page.",
+  },
 ];
 
 const STEPS = [
@@ -94,7 +112,7 @@ const STEPS = [
     color: "text-purple-400",
     bg: "bg-purple-400/10",
     title: "Review & Improve",
-    desc: "See explanations for every answer, track your best scores, and keep coming back to level up.",
+    desc: "Get a detailed results breakdown, chat with the AI tutor for deeper explanations, and keep coming back to level up.",
   },
 ];
 
@@ -299,6 +317,7 @@ export default function HomePage() {
               "5+ Programming Languages",
               "6 Question Types",
               "AI-Powered Generation",
+              "AI Tutor Chat",
               "Daily Auto-Scheduling",
               "Free to Use",
             ].map((item, i) => (
@@ -337,6 +356,86 @@ export default function HomePage() {
               <p className="text-slate-400 text-sm leading-relaxed">{f.desc}</p>
             </article>
           ))}
+        </div>
+      </section>
+
+      {/* ── AI TUTOR SHOWCASE ──────────────────────────────────────────────── */}
+      <section className="bg-surface-800/40 border-y border-surface-700">
+        <div className="max-w-7xl mx-auto px-6 py-20 sm:py-24">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-12 lg:gap-20">
+
+            {/* Left — text */}
+            <div className="flex-1 min-w-0">
+              <div className="inline-flex items-center gap-2 mb-4 px-3 py-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10">
+                <Bot className="w-3.5 h-3.5 text-indigo-400" />
+                <span className="text-xs font-medium text-indigo-400 tracking-wide">New — AI Tutor</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold text-slate-100 mb-4">
+                Don't just see the answer —<br />
+                <span className="text-indigo-400">understand it</span>
+              </h2>
+              <p className="text-slate-400 leading-relaxed mb-6 max-w-lg">
+                After submitting every answer, an AI tutor is one click away. It explains the concept behind the question, and you can keep asking follow-up questions until it fully clicks.
+              </p>
+              <ul className="space-y-3">
+                {[
+                  "Auto-explains the question on open",
+                  "Full multi-turn conversation with context",
+                  "Available on both correct and incorrect answers",
+                  "Resets cleanly when you move to the next question",
+                ].map(point => (
+                  <li key={point} className="flex items-start gap-2.5 text-sm text-slate-300">
+                    <CheckCircle className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+                    {point}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Right — mock chat UI */}
+            <div className="flex-shrink-0 w-full lg:w-[400px]">
+              <div className="rounded-xl border border-indigo-500/20 bg-surface-800 shadow-2xl shadow-black/40 overflow-hidden">
+                {/* Chat header */}
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-indigo-500/15 bg-indigo-500/5">
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                  <span className="text-xs font-medium text-indigo-400">AI Tutor</span>
+                </div>
+
+                {/* Messages */}
+                <div className="px-4 py-4 space-y-3">
+                  {/* AI message */}
+                  <div className="flex justify-start">
+                    <div className="max-w-[85%] px-3 py-2.5 rounded-xl text-sm leading-relaxed bg-surface-700 text-slate-300 border border-surface-600">
+                      The <span className="text-indigo-300 font-mono">map()</span> method creates a <span className="text-slate-100">new array</span> by applying your callback to each element. Since <span className="font-mono text-indigo-300">n * 2</span> doubles each value, <span className="font-mono text-green-400">[1, 2, 3]</span> becomes <span className="font-mono text-green-400">[2, 4, 6]</span>.
+                    </div>
+                  </div>
+                  {/* User message */}
+                  <div className="flex justify-end">
+                    <div className="max-w-[85%] px-3 py-2.5 rounded-xl text-sm leading-relaxed bg-brand-600/20 text-slate-200 border border-brand-500/20">
+                      Why doesn't it modify the original array?
+                    </div>
+                  </div>
+                  {/* AI message */}
+                  <div className="flex justify-start">
+                    <div className="max-w-[85%] px-3 py-2.5 rounded-xl text-sm leading-relaxed bg-surface-700 text-slate-300 border border-surface-600">
+                      Because <span className="font-mono text-indigo-300">map()</span> is <span className="text-slate-100">non-mutating</span> — it always returns a brand new array, leaving the original untouched. This is a core part of JavaScript's functional programming approach.
+                    </div>
+                  </div>
+                </div>
+
+                {/* Input */}
+                <div className="px-4 py-3 border-t border-indigo-500/15 flex gap-2">
+                  <div className="flex-1 bg-surface-700 border border-surface-600 text-slate-500 text-sm rounded-lg px-3 py-2">
+                    Ask a follow-up question...
+                  </div>
+                  <div className="px-3 py-2 bg-indigo-600/20 border border-indigo-500/30 rounded-lg">
+                    <ChevronRight className="w-4 h-4 text-indigo-400" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
         </div>
       </section>
 
